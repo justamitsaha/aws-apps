@@ -1,8 +1,7 @@
-use `aws`;
-
+--This will create the tables for H2 database
 CREATE TABLE customers (
     customer_id BIGINT PRIMARY KEY,
-    row_num INT,
+    row_numbers INT,
     surname VARCHAR(100),
     credit_score INT,
     geography VARCHAR(50),
@@ -50,19 +49,3 @@ CREATE TABLE customer_churn (
         FOREIGN KEY (customer_id)
         REFERENCES customers(customer_id)
 );
-
-
-
-SELECT * FROM aws.customers;
-
-SELECT * FROM aws.customer_churn;
-
-
-use aws;
-SET SQL_SAFE_UPDATES = 0;
-
-DELETE FROM customer_churn;
-DELETE FROM customers;
-
-SET SQL_SAFE_UPDATES = 1;
-
