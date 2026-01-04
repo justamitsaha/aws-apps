@@ -1,5 +1,16 @@
-package com.saha.amit.fileReader.model;
+package com.saha.amit.fileReader.entity;
 
+import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
+
+import java.math.BigDecimal;
+
+@Setter
+@Getter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
 @Table("customer_churn")
 public class CustomerChurnEntity {
 

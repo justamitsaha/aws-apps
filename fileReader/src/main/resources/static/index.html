@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CSV Upload Portal</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+            rel="stylesheet">
+
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">CSV Upload Portal</h2>
+    <a href="/customers.html" class="badge badge-warning" style="color: black;">Customers</a>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            Upload Customer CSV
+        </div>
+        <div class="card-body">
+            <input type="file" id="customerFile" class="form-control mb-3"/>
+            <button class="btn btn-primary" id="uploadCustomerBtn">
+                Upload Customer File
+            </button>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            Upload Customer Churn CSV
+        </div>
+        <div class="card-body">
+            <input type="file" id="churnFile" class="form-control mb-3"/>
+            <button class="btn btn-warning" id="uploadChurnBtn">
+                Upload Churn File
+            </button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            Server Response
+        </div>
+        <div class="card-body">
+            <div class="card">
+                <div class="card-header">Processing Stream</div>
+                <div class="card-body stream-box" id="responseBox"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
