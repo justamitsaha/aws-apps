@@ -2,7 +2,7 @@
 set -e
 
 # -------------------------------
-# OS setup
+# Base OS setup
 # -------------------------------
 dnf update -y
 dnf install -y \
@@ -11,9 +11,9 @@ dnf install -y \
   git \
   maven
 
-alternatives --set java /usr/lib/jvm/java-21-amazon-corretto/bin/java
-alternatives --set javac /usr/lib/jvm/java-21-amazon-corretto/bin/javac
-
+# -------------------------------
+# Set Java 21 explicitly (NO alternatives)
+# -------------------------------
 cat <<EOF >/etc/profile.d/java21.sh
 export JAVA_HOME=/usr/lib/jvm/java-21-amazon-corretto
 export PATH=\$JAVA_HOME/bin:\$PATH
@@ -22,7 +22,7 @@ EOF
 source /etc/profile.d/java21.sh
 
 # -------------------------------
-# Directories
+# Prepare directories
 # -------------------------------
 mkdir -p /home/ec2-user/{apps,h2,logs}
 chown -R ec2-user:ec2-user /home/ec2-user
@@ -49,6 +49,6 @@ cp target/reporting-*.jar /home/ec2-user/apps/reporting.jar
 EOF
 
 # -------------------------------
-# Setup systemd services (FROM REPO)
+# Setup systemd services
 # -------------------------------
 bash /home/ec2-user/aws-apps/documentation/ec2/setup-services.sh

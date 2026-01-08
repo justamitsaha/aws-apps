@@ -1,0 +1,24 @@
+ps aux | grep java
+
+Expected:
+
+fileReader.jar
+reporting.jar
+
+sudo ss -lntp | grep java
+Expected:
+
+makefile
+Copy code
+*:8080
+*:8081
+
+
+tail -f fileReader.log
+tail -f reporting.log
+
+
+sudo cat /var/log/cloud-init-output.log
+
+
+ps aux | grep java
