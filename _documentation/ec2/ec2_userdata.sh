@@ -51,4 +51,4 @@ EOF
 # -------------------------------
 # Setup systemd services
 # -------------------------------
-bash /home/ec2-user/aws-apps/documentation/ec2/setup-services.sh
+bash /home/ec2-user/aws-apps/_documentation/ec2/setup-services.sh
