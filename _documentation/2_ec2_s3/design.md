@@ -66,7 +66,13 @@ This will
 1. Create EC2
 2. Attach security groups
 3. Attach IAM role
-4. Run user data
-5. Download jar from s3
-6. start apps
-7. create service
+4. Run user data which will do the following
+   1. Update packages
+   2. Install java
+   3. Set environment variables JAVA_HOME and PATH
+   4. Create directories for H2 database 
+   5. Download jar from s3
+   6. start apps
+   7. create service
+
+** Since we have de-coupled git from this create service   

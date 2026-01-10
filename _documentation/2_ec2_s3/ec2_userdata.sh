@@ -30,6 +30,47 @@ aws s3 cp s3://amit-app-artifacts/fileReader/fileReader.jar /opt/apps/fileReader
 aws s3 cp s3://amit-app-artifacts/reporting/reporting.jar /opt/apps/reporting.jar
 
 # -------------------------------
-# Setup systemd services
+# Create systemd service: fileReader
 # -------------------------------
-bash /home/ec2-user/aws-apps/_documentation/2_ec2/setup-services.sh
+cat <<EOF >/etc/systemd/system/fileReader.service
+[Unit]
+Description=File Reader Service
+After=network.target
+
+[Service]
+User=ec2-user
+ExecStart=/usr/bin/java -Dspring.profiles.active=ec2 -jar /opt/apps/fileReader.jar
+Restart=always
+RestartSec=5
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# -------------------------------
+# Create systemd service: reporting
+# -------------------------------
+cat <<EOF >/etc/systemd/system/reporting.service
+[Unit]
+Description=Reporting Service
+After=network.target
+
+[Service]
+User=ec2-user
+ExecStart=/usr/bin/java -Dspring.profiles.active=ec2 -Dserver.port=8081 -jar /opt/apps/reporting.jar
+Restart=always
+RestartSec=5
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# -------------------------------
+# Enable & start services
+# -------------------------------
+systemctl daemon-reexec
+systemctl daemon-reload
+systemctl enable fileReader reporting
+systemctl start fileReader reporting
