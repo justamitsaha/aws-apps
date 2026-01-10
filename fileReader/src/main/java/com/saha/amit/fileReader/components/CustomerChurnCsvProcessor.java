@@ -33,7 +33,7 @@ public class CustomerChurnCsvProcessor {
                                         //.doOnSuccess(success -> log.info("Inserted: {}", entity.getUniqueId()))
                                         // Handle errors here so the stream doesn't stop
                                         .onErrorResume(error -> {
-                                            FAILED_RECORDS.add(new FailedRecord(entity, error.getMessage()));
+                                            //FAILED_RECORDS.add(new FailedRecord(entity, error.getMessage()));
                                             // Return Mono.empty() so the "Success" Flux just ignores this row
                                             log.error("Failed to insert record {}: {}", entity.getUniqueId(), error.getMessage());
                                             return Mono.empty();

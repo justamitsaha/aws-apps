@@ -59,3 +59,32 @@ function renderSseChunk(chunk) {
     const box = document.getElementById("responseBox");
     box.scrollTop = box.scrollHeight;
 }
+
+
+$("#saveOnlyBtn").click(async function () {
+    const file = $("#saveOnlyFile")[0].files[0];
+
+    if (!file) {
+        alert("Please select a file first");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    $("#responseBox").text("Saving file...");
+
+    try {
+        const response = await fetch(BASE_URL + "/upload/save-only", {
+            method: "POST",
+            body: formData
+        });
+
+        const text = await response.text();
+        $("#responseBox").text(text);
+
+    } catch (e) {
+        $("#responseBox").text("Save failed");
+    }
+});
+

@@ -58,6 +58,11 @@ public class CsvUploadController {
         return Mono.empty();
     }
 
+    @PostMapping(value = "/save-only", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Mono<ResponseEntity<String>> saveFile(@RequestPart("file") FilePart file) {
+        return ingestionService.saveToDisk(file)
+                .thenReturn(ResponseEntity.ok("File saved successfully on " + System.getProperty("os.name")));
+    }
 
     @DeleteMapping("/cleanup")
     public Mono<ResponseEntity<Void>> cleanup() {
