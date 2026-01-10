@@ -14,7 +14,27 @@ public final class CsvUtils {
 
     public static Flux<String[]> read(FilePart file) {
 
-        /*
+        StringDecoder decoder = StringDecoder.textPlainOnly();
+
+        return decoder.decode(
+                        file.content(),
+                        null, null, null // Use default settings for decoding
+                )
+                .skip(1) // Skip header
+                .map(line -> line.split(","))
+                // Safety check: ensure the row has exactly 14 columns
+                .filter(items -> {
+                    if (items.length < 14) {
+                        System.err.println("Skipping malformed row (length " + items.length + "): " + String.join(",", items));
+                        return false;
+                    }
+                    return true;
+                });
+    }
+}
+
+
+ /*
         Your current code processes each DataBuffer as an independent chunk of text. In reactive programming, a file is read in small pieces (usually 4KB or 8KB).
 
         If a row in your CSV happens to sit exactly on the boundary where one buffer ends and the next begins, the line gets cut in half. 1. Buffer A ends with ...0,0,19 2. Buffer B starts with 0857.79,0
@@ -39,22 +59,4 @@ public final class CsvUtils {
         /*
         The Solution: Use StringDecoder To fix this, you need to tell Spring to "aggregate" the buffers until it finds a newline character, rather than processing chunks manually.
          */
-        StringDecoder decoder = StringDecoder.textPlainOnly();
-
-        return decoder.decode(
-                        file.content(),
-                        null, null, null // Use default settings for decoding
-                )
-                .skip(1) // Skip header
-                .map(line -> line.split(","))
-                // Safety check: ensure the row has exactly 14 columns
-                .filter(items -> {
-                    if (items.length < 14) {
-                        System.err.println("Skipping malformed row (length " + items.length + "): " + String.join(",", items));
-                        return false;
-                    }
-                    return true;
-                });
-    }
-}
 

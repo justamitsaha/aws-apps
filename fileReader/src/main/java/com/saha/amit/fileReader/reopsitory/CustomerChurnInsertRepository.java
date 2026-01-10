@@ -56,10 +56,8 @@ public class CustomerChurnInsertRepository {
                 .bind("churn", c.getChurn())
                 .fetch()
                 .rowsUpdated()
-                .flatMap(rows -> rows == 1
-                        ? Mono.just(c)
-                        : Mono.error(new IllegalStateException("Churn insert failed"))
-                );
+                .then() // Executes the SQL. If it fails, an error Mono is returned here.
+                .thenReturn(c); // If it succeeds, return the original entity.
     }
 }
 

@@ -4,6 +4,7 @@ import com.saha.amit.fileReader.components.CustomerChurnCsvProcessor;
 import com.saha.amit.fileReader.components.CustomerCsvProcessor;
 import com.saha.amit.fileReader.entity.CustomerChurnEntity;
 import com.saha.amit.fileReader.entity.CustomerEntity;
+import com.saha.amit.fileReader.reopsitory.CustomerChurnEntityRepository;
 import com.saha.amit.fileReader.reopsitory.CustomerEntityRepository;
 import com.saha.amit.fileReader.reopsitory.CustomerInsertRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class CsvIngestionService {
     private final CustomerChurnCsvProcessor churnProcessor;
     private final CustomerInsertRepository repository;
     private final CustomerEntityRepository customerEntityRepository;
+    private final CustomerChurnEntityRepository customerChurnEntityRepository;
 
 
     public Flux<CustomerEntity> processCustomer(FilePart file) {
@@ -53,6 +55,13 @@ public class CsvIngestionService {
         return customerEntityRepository
                 .findAll()
                 .take(10);
+    }
+
+
+    public Flux<CustomerChurnEntity> getAllCustomersChurn() {
+        return customerChurnEntityRepository
+                .findAll()
+                .take(100);
     }
 
 
