@@ -4,7 +4,7 @@ set -e
 BUCKET="amit-app-artifacts"
 
 echo "Building fileReader..."
-cd fileReader
+cd ../../fileReader
 mvn clean package -DskipTests
 aws s3 cp target/fileReader-*.jar s3://$BUCKET/fileReader/fileReader.jar
 

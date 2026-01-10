@@ -41,11 +41,12 @@ INSTANCE_ID=$(MSYS_NO_PATHCONV=1 aws ec2 run-instances \
   --subnet-id "$SUBNET_ID" \
   --associate-public-ip-address \
   --block-device-mappings "DeviceName=/dev/xvda,Ebs={VolumeSize=$ROOT_VOLUME_SIZE,VolumeType=gp3,DeleteOnTermination=true}" \
+  --iam-instance-profile Name=$IAM_INSTANCE_PROFILE \
   --user-data file://$USER_DATA_FILE \
   --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$TAG_NAME}]" \
   --query "Instances[0].InstanceId" \
-  --output text \
-  --iam-instance-profile Name=$IAM_INSTANCE_PROFILE \)
+  --output text
+)
 
 echo "Instance launched: $INSTANCE_ID"
 

@@ -32,4 +32,4 @@ aws s3 cp s3://amit-app-artifacts/reporting/reporting.jar /opt/apps/reporting.ja
 # -------------------------------
 # Setup systemd services
 # -------------------------------
-bash /home/ec2-user/aws-apps/_documentation/ec2/setup-services.sh
+bash /home/ec2-user/aws-apps/_documentation/2_ec2/setup-services.sh
