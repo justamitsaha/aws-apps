@@ -12,6 +12,8 @@ SUBNET_ID="subnet-0277585378ad5d2d8"
 TAG_NAME="aws-app"
 USER_DATA_FILE="./ec2_userdata.sh"
 ROOT_VOLUME_SIZE=8   # GB
+IAM_INSTANCE_PROFILE="EC2S3ReadRole"
+
 
 # -------------------------------
 # Find latest Amazon Linux 2023 AMI
@@ -42,7 +44,8 @@ INSTANCE_ID=$(MSYS_NO_PATHCONV=1 aws ec2 run-instances \
   --user-data file://$USER_DATA_FILE \
   --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$TAG_NAME}]" \
   --query "Instances[0].InstanceId" \
-  --output text)
+  --output text \
+  --iam-instance-profile Name=$IAM_INSTANCE_PROFILE \)
 
 echo "Instance launched: $INSTANCE_ID"
 

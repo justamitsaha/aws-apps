@@ -47,7 +47,7 @@ It will prompt you for the following:
 
 ## How to run the apps 
 
-- Start the [ec2-start.sh](./ec2-start.sh) script
+- Start the [ec2-start.sh](../2_ec2_s3/ec2-start.sh) script
 - It loads the [User Data](./ec2_userdata.sh)
 - This loads the [Services](./setup-services.sh)
 
