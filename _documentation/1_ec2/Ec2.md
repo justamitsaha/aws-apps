@@ -56,6 +56,10 @@ In case of any issue
 ### A. Check cloud-init (MOST IMPORTANT)
 
 `sudo  cat /var/log/cloud-init-output.log` 
+
+or 
+
+`sudo  tail -f  /var/log/cloud-init-output.log`
 Look for:
 
 -   Java install
