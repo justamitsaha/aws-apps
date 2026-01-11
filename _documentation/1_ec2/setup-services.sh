@@ -38,6 +38,7 @@ Restart=always
 RestartSec=5
 Environment=JAVA_HOME=/usr/lib/jvm/java-21-amazon-corretto
 Environment=PATH=/usr/lib/jvm/java-21-amazon-corretto/bin:/usr/bin
+Environment=UPLOAD_DIR=/home/ec2-user/uploads
 
 [Install]
 WantedBy=multi-user.target
