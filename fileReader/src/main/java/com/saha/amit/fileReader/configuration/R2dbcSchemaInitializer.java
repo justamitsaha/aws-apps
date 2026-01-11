@@ -7,10 +7,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.r2dbc.core.DatabaseClient;
 
 @Slf4j
-@Configuration
+
 public class R2dbcSchemaInitializer {
 
-    @Bean
+
     ApplicationRunner initSchema(DatabaseClient client) {
         log.info("Initializing database schema...");
         return args -> client
