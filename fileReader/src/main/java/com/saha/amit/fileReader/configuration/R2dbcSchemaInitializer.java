@@ -1,18 +1,21 @@
 package com.saha.amit.fileReader.configuration;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.r2dbc.core.DatabaseClient;
 
+@Slf4j
 @Configuration
 public class R2dbcSchemaInitializer {
 
     @Bean
     ApplicationRunner initSchema(DatabaseClient client) {
+        log.info("Initializing database schema...");
         return args -> client
                 .sql("""
-                CREATE TABLE IF NOT EXISTS customers (
+                CREATE TABLE IF NOT EXISTS "customers" (
                     customer_id BIGINT PRIMARY KEY,
                     row_numbers INT,
                     surname VARCHAR(100),
@@ -29,7 +32,7 @@ public class R2dbcSchemaInitializer {
                     exited BOOLEAN
                 );
 
-                CREATE TABLE IF NOT EXISTS customer_churn (
+                CREATE TABLE IF NOT EXISTS "customer_churn" (
                     customer_id BIGINT PRIMARY KEY,
                     unique_id VARCHAR(50),
 
@@ -63,6 +66,8 @@ public class R2dbcSchemaInitializer {
                 );
             """)
                 .then()
+                .doOnSuccess(v -> log.info("R2DBC schema initialization completed successfully"))
+                .doOnError(e -> log.error("R2DBC schema initialization failed", e))
                 .subscribe();
     }
 }
