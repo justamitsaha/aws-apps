@@ -110,6 +110,37 @@ To tails logs in real-time:
 `journalctl -u fileReader -n 100 -f`
 `journalctl -u reporting -n 100 -f`
 
+-----------
+
+### E. Change environment variables and restart services
+
+If you need to change any environment variable (e.g., DB path, port, profile),  Edit service file
+
+`sudo systemctl edit --full fileReader`
+
+####  Add **these two lines** under `[Service]`:
+
+`Environment=R2DBC_LOG_LEVEL=DEBUG
+ Environment=H2_LOG_LEVEL=DEBUG`
+Save and exit.
+
+#### Reload & Restart (MANDATORY)
+
+`sudo systemctl daemon-reload 
+sudo systemctl restart fileReader`
+
+#### Verify env vars are actually applied
+
+`sudo systemctl show fileReader --property=Environment`
+
+You should see:
+
+`R2DBC_LOG_LEVEL=DEBUG H2_LOG_LEVEL=DEBUG`
+
+####  View logs (this is where the truth is)
+
+`journalctl -u fileReader -f`
+
 
 
 
