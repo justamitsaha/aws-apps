@@ -12,7 +12,7 @@ dnf install -y \
   maven
 
 # -------------------------------
-# Set Java 21 explicitly (NO alternatives)
+# Set Java 21 explicitly
 # -------------------------------
 cat <<EOF >/etc/profile.d/java21.sh
 export JAVA_HOME=/usr/lib/jvm/java-21-amazon-corretto
@@ -43,11 +43,11 @@ cd aws-apps
 
 cd fileReader
 mvn clean package -DskipTests
-cp target/fileReader-*.jar /home/ec2-user/apps/fileReader.jar
+cp target/fileReader-*.jar /opt/apps/fileReader.jar
 
 cd ../reporting
 mvn clean package -DskipTests
-cp target/reporting-*.jar /home/ec2-user/apps/reporting.jar
+cp target/reporting-*.jar /opt/apps/reporting.jar
 EOF
 
 # -------------------------------

@@ -11,8 +11,8 @@ After=network.target
 
 [Service]
 User=ec2-user
-WorkingDirectory=/home/ec2-user/apps
-ExecStart=/usr/bin/java -Dspring.profiles.active=ec2 -jar /home/ec2-user/apps/fileReader.jar
+WorkingDirectory=/opt/apps
+ExecStart=/usr/bin/java -Dspring.profiles.active=ec2 -jar /opt/apps/fileReader.jar
 SuccessExitStatus=143
 Restart=always
 RestartSec=5
@@ -31,8 +31,8 @@ After=network.target
 
 [Service]
 User=ec2-user
-WorkingDirectory=/home/ec2-user/apps
-ExecStart=/usr/bin/java -Dspring.profiles.active=ec2 -Dserver.port=8081 -jar /home/ec2-user/apps/reporting.jar
+WorkingDirectory=/opt/apps
+ExecStart=/usr/bin/java -Dspring.profiles.active=ec2 -Dserver.port=8081 -jar /opt/apps/reporting.jar
 SuccessExitStatus=143
 Restart=always
 RestartSec=5
