@@ -22,10 +22,12 @@ EOF
 source /etc/profile.d/java21.sh
 
 # -------------------------------
-# Prepare directories
+# Persistent directories
 # -------------------------------
-mkdir -p /home/ec2-user/{apps,h2,logs}
-chown -R ec2-user:ec2-user /home/ec2-user
+mkdir -p /home/ec2-user/{h2,uploads,logs}
+mkdir -p /opt/apps
+chown -R ec2-user:ec2-user /home/ec2-user /opt/apps
+chmod -R 755 /home/ec2-user
 
 # -------------------------------
 # Clone & build as ec2-user
