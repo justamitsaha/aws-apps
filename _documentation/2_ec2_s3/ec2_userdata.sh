@@ -24,6 +24,15 @@ mkdir -p /opt/apps /home/ec2-user/logs /home/ec2-user/h2
 chown -R ec2-user:ec2-user /opt/apps /home/ec2-user
 
 # -------------------------------
+# Persistent directories
+# -------------------------------
+mkdir -p /home/ec2-user/{h2,uploads,logs}
+mkdir -p /opt/apps
+chown -R ec2-user:ec2-user /home/ec2-user /opt/apps
+chmod -R 755 /home/ec2-user
+
+
+# -------------------------------
 # Download artifacts from S3
 # -------------------------------
 aws s3 cp s3://amit-app-artifacts/fileReader/fileReader.jar /opt/apps/fileReader.jar
@@ -39,6 +48,7 @@ After=network.target
 
 [Service]
 User=ec2-user
+Environment=UPLOAD_DIR=/home/ec2-user/uploads
 ExecStart=/usr/bin/java -Dspring.profiles.active=ec2 -jar /opt/apps/fileReader.jar
 Restart=always
 RestartSec=5
@@ -47,6 +57,9 @@ SuccessExitStatus=143
 [Install]
 WantedBy=multi-user.target
 EOF
+
+
+
 
 # -------------------------------
 # Create systemd service: reporting

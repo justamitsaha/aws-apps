@@ -100,6 +100,12 @@ If nothing → apps are not running.
 
 These logs will tell us exactly what failed (DB path, profile, port, etc.).
 
+To tails logs in real-time:
+`journalctl -u fileReader -f --no-pager`
+`journalctl -u reporting -f --no-pager`
+`journalctl -u fileReader -n 100 -f`
+`journalctl -u reporting -n 100 -f`
+
 
 
 
