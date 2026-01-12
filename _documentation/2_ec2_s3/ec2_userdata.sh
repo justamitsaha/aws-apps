@@ -49,7 +49,7 @@ After=network.target
 [Service]
 User=ec2-user
 Environment=UPLOAD_DIR=/home/ec2-user/uploads
-ExecStart=/usr/bin/java -Dspring.profiles.active=ec2 -jar /opt/apps/fileReader.jar
+ExecStart=/usr/bin/java -Dspring.profiles.active=h2 -jar /opt/apps/fileReader.jar
 Restart=always
 RestartSec=5
 SuccessExitStatus=143
@@ -71,7 +71,7 @@ After=network.target
 
 [Service]
 User=ec2-user
-ExecStart=/usr/bin/java -Dspring.profiles.active=ec2 -Dserver.port=8081 -jar /opt/apps/reporting.jar
+ExecStart=/usr/bin/java -Dspring.profiles.active=h2 -Dserver.port=8081 -jar /opt/apps/reporting.jar
 Restart=always
 RestartSec=5
 SuccessExitStatus=143

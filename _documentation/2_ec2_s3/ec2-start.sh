@@ -38,7 +38,6 @@ INSTANCE_ID=$(MSYS_NO_PATHCONV=1 aws ec2 run-instances \
   --instance-type "$INSTANCE_TYPE" \
   --key-name "$KEY_NAME" \
   --security-group-ids "$SECURITY_GROUP_ID" \
-  --subnet-id "$SUBNET_ID" \
   --associate-public-ip-address \
   --block-device-mappings "DeviceName=/dev/xvda,Ebs={VolumeSize=$ROOT_VOLUME_SIZE,VolumeType=gp3,DeleteOnTermination=true}" \
   --iam-instance-profile Name=$IAM_INSTANCE_PROFILE \
