@@ -1,11 +1,14 @@
 package com.saha.amit.reporting.controller;
 
 
+import com.saha.amit.reporting.model.RetentionPlan;
 import com.saha.amit.reporting.service.ExternalApiService;
+import com.saha.amit.reporting.service.RetentionAiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
@@ -17,11 +20,19 @@ import reactor.core.publisher.Mono;
 public class ReportingController {
 
     private final ExternalApiService externalApiService;
+    private final RetentionAiService retentionAiService;
 
     @GetMapping("/health")
     public Mono<ResponseEntity<String>> healthCheck() {
         return externalApiService.fetchExternalData("/upload/health")
                 .map(data -> ResponseEntity.ok(data)) // Wrap data in 200 OK
                 .defaultIfEmpty(ResponseEntity.notFound().build()); // Handle empty case
+    }
+
+    @GetMapping("/{id}/analyze")
+    public Mono<ResponseEntity<RetentionPlan>> analyze(@PathVariable Long id) {
+        return retentionAiService.analyze(id)
+                .map(plan -> ResponseEntity.ok(plan))
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 }
