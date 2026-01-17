@@ -6,39 +6,54 @@ import com.saha.amit.fileReader.entity.CustomerProfile;
 
 import java.util.Optional;
 
+import java.util.Objects;
+
 public class CustomerProfileMapper {
 
     public static CustomerProfile mapToProfile(CustomerEntity customer, CustomerChurnEntity churn) {
         if (customer == null || churn == null) {
-            return null; // Or throw an IllegalArgumentException
+            return null; // or throw new IllegalArgumentException("customer/churn cannot be null");
         }
 
         return new CustomerProfile(
                 customer.getCustomerId(),
 
                 // Demographics
-                Optional.ofNullable(customer.getAge()).orElse(0),
-                customer.getGender(),
+                customer.getAge(),
+                churn.getGender() != null ? churn.getGender() : customer.getGender(), // prefer churn if present
                 customer.getGeography(),
-                Boolean.TRUE.equals(churn.getSeniorCitizen()),
+                churn.getSeniorCitizen(),
+
+                // Banking profile (CustomerEntity)
+                customer.getCreditScore(),
+                customer.getNumOfProducts(),
+                customer.getHasCrCard(),
+                customer.getIsActiveMember(),
+                customer.getEstimatedSalary(),
 
                 // Relationship
-                Optional.ofNullable(customer.getTenure()).orElse(0),
-                Boolean.TRUE.equals(customer.getIsActiveMember()),
+                churn.getTenure() != null ? churn.getTenure() : customer.getTenure(),
 
-                // Services
+                // Services (CustomerChurnEntity)
                 churn.getInternetService(),
                 churn.getTechSupport(),
+                churn.getOnlineSecurity(),
+                churn.getDeviceProtection(),
                 churn.getStreamingTv(),
+                churn.getStreamingMovies(),
 
-                // Financial (BigDecimal to double conversion)
-                customer.getBalance() != null ? customer.getBalance().doubleValue() : 0.0,
-                churn.getMonthlyCharges() != null ? churn.getMonthlyCharges().doubleValue() : 0.0,
-                churn.getTotalCharges() != null ? churn.getTotalCharges().doubleValue() : 0.0,
-
-                // Contract
+                // Contract + billing
                 churn.getContract(),
-                churn.getPaymentMethod()
+                churn.getPaperlessBilling(),
+                churn.getPaymentMethod(),
+
+                // Financial
+                churn.getMonthlyCharges(),
+                churn.getTotalCharges(),
+                customer.getBalance(),
+
+                // Label
+                churn.getChurn()
         );
     }
 }

@@ -7,32 +7,46 @@ Why this matters
     You avoid leaking unnecessary data
     You can evolve prompts safely
  */
+import java.math.BigDecimal;
 
 public record CustomerProfile(
         Long customerId,
 
         // Demographics
-        int age,
+        Integer age,
         String gender,
         String geography,
-        boolean seniorCitizen,
+        Boolean seniorCitizen,
+
+        // Banking profile (from CustomerEntity)
+        Integer creditScore,
+        Integer numOfProducts,
+        Boolean hasCrCard,
+        Boolean isActiveMember,
+        BigDecimal estimatedSalary,
 
         // Relationship
-        int tenure,
-        boolean isActiveMember,
+        Integer tenure,
 
-        // Services
+        // Services (from CustomerChurnEntity)
         String internetService,
         String techSupport,
+        String onlineSecurity,
+        String deviceProtection,
         String streamingTv,
+        String streamingMovies,
+
+        // Contract + billing
+        String contract,
+        Boolean paperlessBilling,
+        String paymentMethod,
 
         // Financial
-        double monthlyCharges,
-        double totalCharges,
-        double balance,
+        BigDecimal monthlyCharges,
+        BigDecimal totalCharges,
+        BigDecimal balance,
 
-        // Contract
-        String contract,
-        String paymentMethod
+        // Optional label (only if you want training/testing)
+        Boolean churn
 ) {}
 
