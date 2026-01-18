@@ -1,4 +1,4 @@
-package com.saha.amit.fileReader.reopsitory;
+package com.saha.amit.fileReader.reopsitory.custom;
 
 import com.saha.amit.fileReader.entity.CustomerChurnEntity;
 import lombok.RequiredArgsConstructor;

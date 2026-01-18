@@ -6,7 +6,7 @@ import com.saha.amit.fileReader.entity.CustomerChurnEntity;
 import com.saha.amit.fileReader.entity.CustomerEntity;
 import com.saha.amit.fileReader.reopsitory.CustomerChurnEntityRepository;
 import com.saha.amit.fileReader.reopsitory.CustomerEntityRepository;
-import com.saha.amit.fileReader.reopsitory.CustomerInsertRepository;
+import com.saha.amit.fileReader.reopsitory.custom.CustomerInsertRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

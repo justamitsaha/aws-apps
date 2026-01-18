@@ -25,14 +25,14 @@ public class ReportingController {
     @GetMapping("/health")
     public Mono<ResponseEntity<String>> healthCheck() {
         return externalApiService.fetchExternalData("/upload/health")
-                .map(data -> ResponseEntity.ok(data)) // Wrap data in 200 OK
+                .map(ResponseEntity::ok) // Wrap data in 200 OK
                 .defaultIfEmpty(ResponseEntity.notFound().build()); // Handle empty case
     }
 
     @GetMapping("/{id}/analyze")
     public Mono<ResponseEntity<RetentionPlan>> analyze(@PathVariable Long id) {
-        return retentionAiService.analyze(id)
-                .map(plan -> ResponseEntity.ok(plan))
+        return retentionAiService.analyzeCustomer(id)
+                .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 }

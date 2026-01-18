@@ -3,7 +3,7 @@ package com.saha.amit.fileReader.components;
 import com.saha.amit.fileReader.entity.CustomerChurnEntity;
 import com.saha.amit.fileReader.entity.FailedRecord;
 import com.saha.amit.fileReader.mapper.CustomerChurnCsvMapper;
-import com.saha.amit.fileReader.reopsitory.CustomerChurnInsertRepository;
+import com.saha.amit.fileReader.reopsitory.custom.CustomerChurnInsertRepository;
 import com.saha.amit.fileReader.util.CsvUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -2,7 +2,7 @@ package com.saha.amit.fileReader.components;
 
 import com.saha.amit.fileReader.entity.CustomerEntity;
 import com.saha.amit.fileReader.mapper.CustomerCsvMapper;
-import com.saha.amit.fileReader.reopsitory.CustomerInsertRepository;
+import com.saha.amit.fileReader.reopsitory.custom.CustomerInsertRepository;
 import com.saha.amit.fileReader.util.CsvUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
