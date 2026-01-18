@@ -166,6 +166,17 @@ public class RetentionAiService {
         }
         return trimmed.trim();
     }
+
+
+    public Mono<RetentionPlan> analyzeCustomerWithoutCache(Long id) {
+        String customerId = String.valueOf(id);
+        return externalApiService.fetchCustomerProfile(id)
+                .doOnError(error -> log.error("Error fetching profile customerId={}: {}", customerId, error.getMessage()))
+                .switchIfEmpty(Mono.error(new RuntimeException("Customer profile not found for id: " + id)))
+                .flatMap(this::analyzeCustomerWithAI);
+    }
+
+
 }
 
         /*var retentionPlan = chatClient.prompt()

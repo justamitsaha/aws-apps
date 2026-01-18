@@ -33,4 +33,12 @@ public class ReportingController {
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
+
+    @CrossOrigin(origins = "http://localhost:8080")
+    @GetMapping("/{id}/analyze/nocache")
+    public Mono<ResponseEntity<RetentionPlan>> analyzeNoCache(@PathVariable Long id) {
+        return retentionAiService.analyzeCustomerWithoutCache(id)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
 }
