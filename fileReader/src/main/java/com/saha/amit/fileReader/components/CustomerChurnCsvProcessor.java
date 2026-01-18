@@ -23,7 +23,6 @@ public class CustomerChurnCsvProcessor {
     private final CustomerChurnInsertRepository repository;
 
     // Use a thread-safe list to handle concurrent updates
-    public static final List<FailedRecord> FAILED_RECORDS = new CopyOnWriteArrayList<>();
 
     public Flux<CustomerChurnEntity> process(FilePart file) {
         return CsvUtils.read(file)

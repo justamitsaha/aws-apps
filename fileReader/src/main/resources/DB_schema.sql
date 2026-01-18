@@ -52,17 +52,27 @@ CREATE TABLE customer_churn (
 );
 
 
+CREATE TABLE ai_interactions (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    customer_id VARCHAR(50),
+    raw_prompt TEXT,               -- Prompts can be long, TEXT is fine here
+    ai_response JSON,             -- Use JSON for the structured output
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 
 SELECT * FROM aws.customers;
 
 SELECT * FROM aws.customer_churn;
 
 
+-- Cleanup tables
 use aws;
 SET SQL_SAFE_UPDATES = 0;
 
 DELETE FROM customer_churn;
 DELETE FROM customers;
+DELETE FROM ai_interactions;
 
 SET SQL_SAFE_UPDATES = 1;
 

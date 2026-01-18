@@ -64,6 +64,13 @@ public class R2dbcSchemaInitializer {
                         FOREIGN KEY (customer_id)
                         REFERENCES customers(customer_id)
                 );
+                CREATE TABLE IF NOT EXISTS ai_interactions (
+                                id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                customer_id VARCHAR(50),
+                                raw_prompt TEXT,               -- Prompts can be long, TEXT is fine here
+                                ai_response JSON,             -- Use JSON for the structured output
+                                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                            );
             """)
                 .then()
                 .doOnSuccess(v -> log.info("R2DBC schema initialization completed successfully"))

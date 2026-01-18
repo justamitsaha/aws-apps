@@ -19,7 +19,8 @@ public class CustomerEntity {
     @Column("customer_id")
     private Long customerId;
 
-    @Column("row_num")
+    //@Column("row_num")
+    @Column("row_numbers")
     private Integer rowNumbers;
 
     private String surname;

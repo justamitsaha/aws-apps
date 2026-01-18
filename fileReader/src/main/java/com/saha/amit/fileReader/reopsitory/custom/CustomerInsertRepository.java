@@ -65,6 +65,10 @@ public class CustomerInsertRepository {
                                 .fetch()
                                 .rowsUpdated()
                 )
+                .then(
+                        client.sql("DELETE FROM ai_interactions")
+                                .fetch()
+                                .rowsUpdated())
                 .then();
     }
 

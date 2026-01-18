@@ -53,7 +53,7 @@ public class ExternalApiService {
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.empty())
                 .bodyToMono(AiInteraction.class)
                 .doOnSuccess(res -> {
-                    if (res != null) log.debug("Cache HIT for customer: {}", customerId);
+                    if (res != null) log.debug("Cache HIT for customer: {}", res);
                 })
                 .doOnError(error -> log.error("Error fetching saved recommendation for customerId {}: {}", customerId, error.getMessage()));
     }
@@ -64,7 +64,7 @@ public class ExternalApiService {
                 .bodyValue(interaction)
                 .retrieve()
                 .bodyToMono(AiInteraction.class)
-                .doOnSuccess(s -> log.debug("Successfully persisted AI response to API 1"))
+                .doOnSuccess(s -> log.debug("Successfully persisted AI response to API 1{}", s))
                 .doOnError(error -> log.error("Error saving AI interaction for customerId {}: {}", interaction.customerId(), error.getMessage()));
     }
 }

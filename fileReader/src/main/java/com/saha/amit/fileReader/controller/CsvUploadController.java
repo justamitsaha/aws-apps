@@ -30,44 +30,16 @@ public class CsvUploadController {
         return ResponseEntity.ok(ingestionService.processCustomer(file));
     }
 
-    @GetMapping(value= "/customers", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<CustomerEntity> customerEndpoint() {
-        return ingestionService.getAllCustomers();
-    }
-
     @PostMapping(value = "/churn", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public ResponseEntity<Flux<CustomerChurnEntity>> upload(@RequestPart("file") FilePart file) {
         log.info("Received churn file upload request");
         return ResponseEntity.ok(ingestionService.processChurn(file));
     }
 
-    @GetMapping(value= "/customersChurn", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<CustomerChurnEntity> customerChurnEndpoint() {
-        return ingestionService.getAllCustomersChurn();
-    }
-
-    @GetMapping("/churnFailures")
-    public List<FailedRecord> getFailures() {
-        return CustomerChurnCsvProcessor.FAILED_RECORDS;
-    }
-
-    // IMPORTANT: An endpoint to clear the list after you've downloaded/fixed it
-    @DeleteMapping("/churnFailures")
-    public Mono<Void> clearFailures() {
-        CustomerChurnCsvProcessor.FAILED_RECORDS.clear();
-        return Mono.empty();
-    }
-
     @PostMapping(value = "/save-only", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Mono<ResponseEntity<String>> saveFile(@RequestPart("file") FilePart file) {
         return ingestionService.saveToDisk(file)
                 .thenReturn(ResponseEntity.ok("File saved successfully on " + System.getProperty("os.name")));
-    }
-
-    @DeleteMapping("/cleanup")
-    public Mono<ResponseEntity<Void>> cleanup() {
-        return ingestionService.clearAllData()
-                .then(Mono.just(ResponseEntity.noContent().build()));
     }
 
     @GetMapping("/health")

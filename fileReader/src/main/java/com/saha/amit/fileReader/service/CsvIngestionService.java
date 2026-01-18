@@ -27,9 +27,7 @@ public class CsvIngestionService {
 
     private final CustomerCsvProcessor customerProcessor;
     private final CustomerChurnCsvProcessor churnProcessor;
-    private final CustomerInsertRepository repository;
-    private final CustomerEntityRepository customerEntityRepository;
-    private final CustomerChurnEntityRepository customerChurnEntityRepository;
+
 
 
     public Flux<CustomerEntity> processCustomer(FilePart file) {
@@ -52,24 +50,6 @@ public class CsvIngestionService {
         } else {
             throw new IllegalArgumentException("Unsupported file: " + filename);
         }
-    }
-
-
-    public Mono<Void> clearAllData() {
-        return repository.clearAll();
-    }
-
-    public Flux<CustomerEntity> getAllCustomers() {
-        return customerEntityRepository
-                .findAll()
-                .take(10);
-    }
-
-
-    public Flux<CustomerChurnEntity> getAllCustomersChurn() {
-        return customerChurnEntityRepository
-                .findAll()
-                .take(100);
     }
 
     @Value("${app.upload.dir}")

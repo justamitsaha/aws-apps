@@ -39,10 +39,12 @@ public class RetentionAiService {
                 .flatMap(profile ->
                         // 1. ATTEMPT CACHE FETCH
                         externalApiService.getSavedRecommendation(customerId)
-                                .doOnNext(aiInteraction -> log.info("Fetched cached recommendation for customerId={}:", customerId))
+                                .doOnNext(aiInteraction -> log.info("Fetched cached recommendation for customerId={}:", aiInteraction))
                                 .flatMap(interaction -> Mono.fromCallable(() ->
-                                        objectMapper.readValue(interaction.aiResponse(), RetentionPlan.class)
-                                ))
+                                                objectMapper.readValue(interaction.aiResponse(), RetentionPlan.class)
+                                        )
+                                        // Can be resource intensive, so offload to boundedElastic
+                                        .subscribeOn(Schedulers.boundedElastic()))
                                 .doOnNext(plan -> log.info("Cache HIT for customer: {}", plan))
                                 // RESILIENCE: If API 1 is down or DB error, log it and treat as a Cache Miss
                                 .onErrorResume(JsonProcessingException.class, e -> {
@@ -162,10 +164,8 @@ public class RetentionAiService {
             // remove ending ```
             trimmed = trimmed.replaceFirst("\\s*```$", "");
         }
-
         return trimmed.trim();
     }
-
 }
 
         /*var retentionPlan = chatClient.prompt()
