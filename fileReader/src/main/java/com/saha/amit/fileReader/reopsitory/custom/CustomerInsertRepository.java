@@ -2,10 +2,12 @@ package com.saha.amit.fileReader.reopsitory.custom;
 
 import com.saha.amit.fileReader.entity.CustomerEntity;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class CustomerInsertRepository {
@@ -14,7 +16,7 @@ public class CustomerInsertRepository {
 
     public Mono<CustomerEntity> insert(CustomerEntity c) {
         return client.sql("""
-                            INSERT INTO customers (
+                            INSERT INTO aws.customers (
                                 customer_id, row_numbers, surname, credit_score, geography,
                                 gender, age, tenure, balance, num_of_products,
                                 has_cr_card, is_active_member, estimated_salary, exited
@@ -43,7 +45,8 @@ public class CustomerInsertRepository {
                 .flatMap(rows -> rows == 1
                         ? Mono.just(c)
                         : Mono.error(new IllegalStateException("Customer insert failed"))
-                );
+                )
+                .doOnError(e -> log.error("Insert failed for customerId={}, data={}", c.getCustomerId(), c, e));
     }
 
     public Mono<Void> clearCustomerChurn() {
