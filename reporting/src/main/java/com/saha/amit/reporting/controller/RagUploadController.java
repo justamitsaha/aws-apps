@@ -1,0 +1,59 @@
+package com.saha.amit.reporting.controller;
+
+import com.saha.amit.reporting.model.Chunk;
+import com.saha.amit.reporting.service.RagChunkService;
+import com.saha.amit.reporting.service.RagIngestService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.List;
+
+@Slf4j
+@RestController
+@RequestMapping("/rag")
+public class RagUploadController {
+
+    private final RagChunkService ragChunkService;
+    private final RagIngestService ragIngestService;
+
+    public RagUploadController(RagChunkService ragChunkService, RagIngestService ragIngestService) {
+        this.ragChunkService = ragChunkService;
+        this.ragIngestService = ragIngestService;
+    }
+
+
+
+    /**
+     * Upload a file and return the chunks of that file.
+     * Request must be multipart/form-data with key "file"
+     * Example: curl -X POST http://localhost:8081/rag/upload -F "file=@offers_catalog.md"
+     */
+    @CrossOrigin(origins = "http://localhost:8080")
+    @PostMapping(value = "/upload", consumes = "multipart/form-data")
+    public Mono<ResponseEntity<List<Chunk>>> upload(@RequestPart("file") FilePart filePart) {
+        return ragChunkService.chunkUploadedFile(filePart)
+                .flatMap(chunks ->
+                        // save to DB using the same filePart OR using chunks (recommended)
+                        ragIngestService.ingestChunks(filePart.filename(), chunks)
+                                .thenReturn(ResponseEntity.ok(chunks))
+                );
+    }
+
+    @CrossOrigin(origins = "http://localhost:8080")
+    @PostMapping(
+            value = "/upload2",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.TEXT_EVENT_STREAM_VALUE // or MediaType.APPLICATION_NDJSON_VALUE
+    )
+    public Flux<Chunk> upload3(@RequestPart("file") FilePart filePart) {
+        log.info("Received file: {}", filePart.filename());
+        return ragChunkService.chunkUploadedFile2(filePart);
+    }
+}
+
+

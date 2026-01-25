@@ -79,6 +79,10 @@ CREATE TABLE aws.ai_interactions (
 -- ----------------------------
 SELECT * FROM aws.customers;
 SELECT * FROM aws.customer_churn;
+SELECT * FROM aws.ai_interactions;
+SELECT COUNT (*) FROM aws.customers;
+SELECT COUNT (*) FROM aws.customer_churn;
+SELECT COUNT (*) FROM aws.ai_interactions;
 
 -- ----------------------------
 -- Cleanup (Postgres doesn't need SQL_SAFE_UPDATES)

@@ -92,3 +92,30 @@ body {
     border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
+
+.chunk-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.chunk-item {
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 8px;
+    padding: 12px;
+    background: #fff;
+}
+
+.chunk-text {
+    margin-top: 8px;
+    font-family: monospace;
+    font-size: 13px;
+    color: #333;
+    white-space: pre-wrap;
+}
+
+.chunk-item {
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+
