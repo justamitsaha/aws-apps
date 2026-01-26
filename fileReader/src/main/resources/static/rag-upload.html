@@ -76,6 +76,34 @@
         </div>
     </div>
 
+    <div class="card mb-4">
+        <div class="card-header">RAG Search (Vector)</div>
+        <div class="card-body">
+
+            <div class="row g-2 align-items-center">
+                <div class="col-md-7">
+                    <input type="text" id="ragQuery" class="form-control"
+                           placeholder="Ask something (e.g. pricing rules, retention policy)">
+                </div>
+
+                <div class="col-md-2">
+                    <input type="number" id="topK" class="form-control" value="5" min="1" max="20">
+                </div>
+
+                <div class="col-md-3 d-grid">
+                    <button class="btn btn-success" id="ragSearchBtn">Search</button>
+                </div>
+            </div>
+
+            <div class="mt-3 text-muted">
+                Calls: <code>GET /rag/search?q=...&topK=...</code>
+            </div>
+
+            <hr/>
+
+            <div id="searchResults" class="text-muted">No search yet.</div>
+        </div>
+    </div>
 
     <div class="card">
         <div class="card-header">Raw JSON</div>

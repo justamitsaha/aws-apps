@@ -113,3 +113,67 @@ function escapeHtml(str) {
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
 }
+
+$("#ragSearchBtn").click(function () {
+    const q = ($("#ragQuery").val() || "").trim();
+    const topK = $("#topK").val() || 5;
+
+    if (!q) {
+        alert("Enter a search query");
+        return;
+    }
+
+    $("#searchResults").html("<span class='text-muted'>Searching...</span>");
+
+    $.ajax({
+        url: `${BASE_URL}/rag/search?q=${encodeURIComponent(q)}&topK=${topK}`,
+        method: "GET",
+        success: function (matches) {
+            renderSearchResults(matches);
+        },
+        error: function (xhr) {
+            $("#searchResults").html(
+                `<span class="text-danger">Search failed (HTTP ${xhr.status})</span>`
+            );
+        }
+    });
+});
+
+// Enter key triggers search
+$("#ragQuery").on("keypress", function (e) {
+    if (e.which === 13) $("#ragSearchBtn").click();
+});
+
+function renderSearchResults(matches) {
+    if (!matches || matches.length === 0) {
+        $("#searchResults").html("<div class='text-warning'>No matches found.</div>");
+        return;
+    }
+
+    const html = matches.map((m, i) => {
+        return `
+          <div class="chunk-item">
+              <div class="d-flex justify-content-between align-items-center">
+                  <strong>#${i + 1} | ${escapeHtml(m.fileName || "unknown")}</strong>
+                  <span class="badge bg-primary">Score: ${formatScore(m.score)}</span>
+              </div>
+
+              <div class="text-muted mt-1">
+                  Doc: <strong>${m.documentId}</strong> |
+                  ChunkId: <strong>${m.chunkId}</strong> |
+                  ChunkIndex: <strong>${m.chunkIndex}</strong>
+              </div>
+
+              <div class="chunk-text mt-2">${escapeHtml(trimText(m.chunkText, 800))}</div>
+          </div>
+        `;
+    }).join("");
+
+    $("#searchResults").html(html);
+}
+
+function formatScore(score) {
+    if (score === null || score === undefined) return "-";
+    return Number(score).toFixed(4);
+}
+

@@ -1,6 +1,7 @@
 package com.saha.amit.reporting.controller;
 
 import com.saha.amit.reporting.model.Chunk;
+import com.saha.amit.reporting.model.ChunkMatch;
 import com.saha.amit.reporting.service.RagChunkService;
 import com.saha.amit.reporting.service.RagIngestService;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +43,15 @@ public class RagUploadController {
                         ragIngestService.ingestChunks(filePart.filename(), chunks)
                                 .thenReturn(ResponseEntity.ok(chunks))
                 );
+    }
+
+    @CrossOrigin(origins = "http://localhost:8080")
+    @GetMapping("/search")
+    public Flux<ChunkMatch> search(
+            @RequestParam("q") String q,
+            @RequestParam(name = "topK", defaultValue = "5") int topK
+    ) {
+        return ragIngestService.search(q, topK);
     }
 
     @CrossOrigin(origins = "http://localhost:8080")

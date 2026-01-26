@@ -1,7 +1,9 @@
 package com.saha.amit.reporting.service;
 
 import com.saha.amit.reporting.model.Chunk;
+import com.saha.amit.reporting.model.ChunkMatch;
 import com.saha.amit.reporting.repository.RagIngestRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -9,17 +11,15 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
+@Slf4j
 @Service
 public class RagIngestService {
 
-    private final RagChunkService ragChunkService;
     private final RagIngestRepository repository;
     private final EmbeddingService embeddingService;
 
-    public RagIngestService(RagChunkService ragChunkService,
-                            RagIngestRepository repository,
+    public RagIngestService(RagIngestRepository repository,
                             EmbeddingService embeddingService) {
-        this.ragChunkService = ragChunkService;
         this.repository = repository;
         this.embeddingService = embeddingService;
     }
@@ -28,7 +28,11 @@ public class RagIngestService {
         return repository.insertDocument(fileName)
                 .flatMapMany(documentId ->
                         Flux.fromIterable(chunks)
-                                .concatMap(chunk -> saveChunk(documentId, chunk))
+                                .concatMap(chunk -> saveChunk(documentId, chunk)
+                                        .onErrorResume(ex -> {
+                                            log.error("Failed chunk {}", chunk.index(), ex);
+                                            return Mono.empty();
+                                        }))
                 )
                 .then();
     }
@@ -47,17 +51,10 @@ public class RagIngestService {
                 .then();
     }
 
-
-//    public Mono<Long> ingest(FilePart filePart) {
-//        String fileName = filePart.filename();
-//
-//        return repository.insertDocument(fileName)
-//                .flatMap(documentId ->
-//                        ragChunkService.chunkUploadedFile(filePart)
-//                                .flatMapMany(Flux::fromIterable)
-//                                .concatMap(chunk -> saveChunk(documentId, chunk))
-//                                .then(Mono.just(documentId))
-//                );
-//    }
+    public Flux<ChunkMatch> search(String query, int topK) {
+        return embeddingService.embedAsync(query)
+                .map(embeddingService::toPgVectorLiteral)
+                .flatMapMany(literal -> repository.searchSimilarChunks(literal, topK));
+    }
 }
 
