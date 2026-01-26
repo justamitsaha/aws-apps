@@ -47,10 +47,10 @@ public class RagIngestRepository {
                             d.file_name,
                             c.chunk_index,
                             c.chunk_text,
-                            1 - (c.embedding <=> CAST(:q AS vector(1536))) AS score
+                            1 - (c.embedding OPERATOR(public.<=>) CAST(:q AS public.vector(1536))) AS score
                         FROM aws.document_chunks c
                         JOIN aws.documents d ON d.id = c.document_id
-                        ORDER BY c.embedding <=> CAST(:q AS vector(1536))
+                        ORDER BY c.embedding OPERATOR(public.<=>) CAST(:q AS public.vector(1536))
                         LIMIT :topK
                         """)
                 .bind("q", queryEmbeddingLiteral)

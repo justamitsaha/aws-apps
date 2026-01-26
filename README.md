@@ -1,119 +1,149 @@
+# AWS Apps - Customer Churn + AI Reporting + RAG
 
-## 1) Customer Data + Churn Data Platform (Application 1)
+This repo contains two Spring Boot WebFlux services that work together:
 
-### What it does
+- `fileReader` (port 8080): CSV ingestion, customer profile APIs, and static UI.
+- `reporting` (port 8081): AI retention analysis + RAG ingestion/search.
 
--   Accepts uploads of **two CSV datasets**
+Both services use PostgreSQL (pgvector) via R2DBC and share the same schema (`aws`).
 
-    -   Customer profile dataset (`customers`)
+## Repo layout
 
-    -   Customer churn dataset (`customer_churn`)
+- `fileReader/` - CSV ingestion + customer profile service (serves the UI).
+- `reporting/` - AI analysis + RAG service.
+- `_setup/docker/docker-compose.yaml` - local Postgres (pgvector) container.
+- `_files/` - sample CSVs (`Churn_Modelling.csv`, `CustomerChurn.csv`).
+- `_rag-docs/` - sample policy documents for RAG uploads.
+- `_documentation/` - AWS setup notes/scripts.
 
--   Persists both into a relational database (H2/MySQL)
+## Architecture
 
--   Exposes a **joined “CustomerProfile” endpoint** that returns a combined view
+1. Upload CSVs to `fileReader` (SSE streaming endpoints).
+2. `fileReader` stores customers + churn data in Postgres (`aws.customers`, `aws.customer_churn`).
+3. `reporting` calls `fileReader` to fetch a combined `CustomerProfile`.
+4. `reporting` calls OpenAI (Spring AI ChatClient) to generate a `RetentionPlan`.
+5. `reporting` caches the plan by saving it back to `fileReader` (`aws.ai_interactions`).
+6. For RAG, `reporting` chunks documents, embeds them, and stores chunks in pgvector.
 
+## Quickstart (local)
 
-### Key output
+1) Start Postgres:
 
-`GET /customerProfile/{customerId}` returns one clean object with fields like:
+```bash
+docker compose -f _setup/docker/docker-compose.yaml up -d
+```
 
--   age, gender, geography
+2) Initialize schema/tables:
 
--   tenure, contract
+- Customers + churn + cache:
+  - `fileReader/src/main/resources/postgress.sql`
+- RAG documents + chunks + vector extension:
+  - `reporting/src/main/resources/pgvector.sql`
 
--   monthlyCharges, totalCharges
+3) Start `fileReader` (port 8080):
 
--   techSupport, internetService
+```bash
+cd fileReader
+./mvnw spring-boot:run
+```
 
--   paymentMethod, etc.
+4) Start `reporting` (port 8081):
 
+```bash
+cd reporting
+mvn spring-boot:run
+```
 
-This service acts as your **structured data provider**.
+5) Open UI:
 
-----------
+- `http://localhost:8080/`
 
-## 2) AI Reporting / Reasoning Service (Application 2)
+## Configuration
 
-### What it does
+### Common
 
--   Exposes: `GET /reporting/{customerId}/analyze`
+- `SPRING_R2DBC_URL` (default `r2dbc:postgresql://localhost:5432/aidb`)
+- `SPRING_R2DBC_USERNAME` / `SPRING_R2DBC_PASSWORD` (default `aiuser` / `aipass`)
+- `SERVER_PORT` to change ports
 
--   Calls Application 1 to fetch the combined customer profile
+### fileReader
 
--   Sends selected fields to an LLM using **Spring AI ChatClient**
+- `app.upload.dir` (default `/tmp/uploads`)
+- Optional profiles in `fileReader/src/main/resources` for H2/MySQL/EC2
 
--   Returns a **structured response** (`RetentionPlan`) with:
+### reporting
 
-    -   riskLevel
+- `APP_API_URL` (default `http://localhost:8080`)
+- `OPENAI_API_KEY_PRACTICE` (required for chat + embeddings)
+- `rag.chunk.size` (default `1000`)
+- `rag.chunk.overlap` (default `200`)
 
-    -   reasoning
+## Service: fileReader (port 8080)
 
-    -   actions
+### CSV ingestion
 
-    -   discountCode
+- `POST /upload/customer` (multipart `file`) -> SSE stream of `CustomerEntity`
+- `POST /upload/churn` (multipart `file`) -> SSE stream of `CustomerChurnEntity`
+- `POST /upload/save-only` (multipart `file`) -> saves to disk
+- `GET /upload/health`
 
+Notes:
 
-This service acts as your **GenAI reasoning microservice**.
+- Expected filenames: `Churn_Modelling.csv` and `CustomerChurn.csv`.
+- Parsing is line-based and skips malformed rows.
 
-----------
+### Customer profile + cache
 
-## 3) RAG Document Ingestion (New Phase Work)
+- `GET /customerProfile/{id}` -> joined `CustomerProfile`
+- `GET /customerProfile/customers?page=&size=` -> SSE stream of customers
+- `GET /customerProfile/customersChurn?page=&size=` -> SSE stream of churn rows
+- `DELETE /customerProfile/cleanup` -> deletes customers, churn, and AI cache
+- `POST /customerProfile/recommendation` -> save AI plan (cache)
+- `GET /customerProfile/{customerId}/recommendation` -> fetch latest cache entry
 
-### What it does
+## Service: reporting (port 8081)
 
-You built a **document upload + chunking + embedding pipeline** that stores data in **Postgres + pgvector** using **R2DBC**.
+### AI retention analysis
 
-### Data model
+- `GET /reporting/{id}/analyze` -> returns `RetentionPlan` (uses cache when available)
+- `GET /reporting/{id}/analyze/nocache` -> always calls the model
+- `GET /reporting/health` -> proxy call to `fileReader` `/upload/health`
 
--   `aws.documents` → stores uploaded file metadata + full content
+`RetentionPlan` fields: `riskLevel`, `reasoning[]`, `actions[]`, `offer`.
 
--   `aws.document_chunks` → stores:
+### RAG ingestion + search
 
-    -   chunk_index
+- `POST /rag/upload` (multipart `file`) -> chunk + embed + store in pgvector
+- `GET /rag/search?q=...&topK=...` -> semantic search results
+- `POST /rag/upload2` -> streaming chunk preview (does not persist)
 
-    -   chunk_text
+Chunking uses overlap; embeddings are stored as `vector(1536)`.
 
-    -   embedding vector(1536)
+### Test endpoints
 
+- `GET /ping/...` (demo endpoints for Mono/Flux behavior)
 
-### Upload endpoint behavior
+## UI (served by fileReader)
 
-`POST /upload (multipart)`
+Pages in `fileReader/src/main/resources/static`:
 
--   reads file content
+- `index.html` - CSV upload portal (SSE logs)
+- `customers.html` - paginated SSE viewers + cleanup
+- `customer-profile.html` - single profile lookup
+- `ai-report.html` - calls `reporting` and shows the plan
+- `rag-upload.html` - batch chunk upload + preview + search
+- `rag-upload-stream.html` - streaming chunk preview (SSE)
 
--   splits into overlapping chunks (chunkSize=1000, overlap=200)
+More UI notes: `README_UI.md`.
 
--   generates embeddings using an embedding model (OpenAI)
+## Sample data
 
--   stores embeddings in pgvector
+- CSVs: `_files/Churn_Modelling.csv`, `_files/CustomerChurn.csv`
+- RAG docs: `_rag-docs/*.md`
 
+## Typical flow
 
-This is your **RAG knowledge base ingestion layer**.
-
-----------
-
-## Architecture summary (one line)
-
-You have built a **two-microservice GenAI system** where:
-
--   one service manages **structured customer data**
-
--   another service generates **AI retention recommendations**  
-    and you’ve started adding **RAG capability** by storing document embeddings in **pgvector** for semantic retrieval.
-
-
-----------
-
-## What’s left to complete RAG
-
-The next missing piece is:
-
--   `GET /rag/search?q=...&topK=...`
-
-    -   embed query
-
-    -   retrieve top chunks from pgvector
-
-    -   feed those chunks into the LLM prompt during `/analyze`
+1) Upload both CSVs in `index.html`.
+2) Browse customers in `customers.html` or fetch a profile by ID.
+3) Use `ai-report.html` to generate and cache a retention plan.
+4) Upload policy docs in `rag-upload.html` and query with `/rag/search`.
