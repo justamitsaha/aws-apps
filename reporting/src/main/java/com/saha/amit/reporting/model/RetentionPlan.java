@@ -8,24 +8,27 @@ public record RetentionPlan(
         RiskLevel riskLevel,
         List<String> reasoning,   // multiple bullet reasons (more useful)
         List<ActionItem> actions,
-        Offer offer               // can be null
+        Offer offer,              // can be null
+        List<Citation> citations
 ) {
-    public enum RiskLevel { HIGH, MEDIUM, LOW }
+    public enum RiskLevel {HIGH, MEDIUM, LOW}
 
     public record ActionItem(
             String title,
             String details,
             String priority        // HIGH/MEDIUM/LOW
-    ) {}
+    ) {
+    }
 
     public record Offer(
             OfferType type,           // DISCOUNT | UPGRADE | SUPPORT | NONE
             String description,
             Integer discountPercent,  // null if not applicable
             Integer durationMonths    // null if not applicable
-    ) {}
+    ) {
+    }
 
-    public enum OfferType { DISCOUNT, UPGRADE, SUPPORT, NONE }
+    public enum OfferType {DISCOUNT, UPGRADE, SUPPORT, NONE}
 
 }
 

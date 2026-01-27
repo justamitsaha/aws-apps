@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <title>RAG File Upload (Streaming)</title>
@@ -9,100 +10,100 @@
 </head>
 
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="index.html">CSV Portal</a>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">CSV Portal</a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#mainNavbar" aria-controls="mainNavbar"
-                aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+                aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-        <div class="collapse navbar-collapse" id="mainNavbar">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="index.html">Uploads</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="customers.html">Customers</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="customer-profile.html">Customer Profile</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="ai-report.html">AI Report</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="rag-upload.html">RAG Upload</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="rag-upload-stream.html">RAG Upload (Stream)</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="ai-rag-report.html">AI Rag Report</a>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
-
-<div class="container mt-5">
-    <h2 class="text-center mb-4">RAG Upload (Streaming Chunks)</h2>
-
-    <div class="card mb-4">
-        <div class="card-header">Upload File</div>
-        <div class="card-body">
-            <input type="file" id="ragFile" class="form-control mb-3" />
-
-            <div class="d-flex gap-2">
-                <button class="btn btn-primary" id="ragUploadBtn">Upload & Stream</button>
-                <button class="btn btn-outline-danger" id="clearBtn">Clear</button>
-            </div>
-
-            <div class="mt-3">
-                <small class="text-muted">
-                    Calls: <code>POST /rag/upload</code> (SSE stream)
-                </small>
+            <div class="collapse navbar-collapse" id="mainNavbar">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Uploads</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="customers.html">Customers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="customer-profile.html">Customer Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="ai-report.html">AI Report</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="rag-upload.html">RAG Upload</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="rag-upload-stream.html">RAG Upload (Stream)</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="ai-rag-report.html">AI Rag Report</a>
+                    </li>
+                </ul>
             </div>
         </div>
-    </div>
+    </nav>
 
-    <div class="card mb-4">
-        <div class="card-header">Controls</div>
-        <div class="card-body">
-            <div class="row g-2">
-                <div class="col-md-8">
-                    <input type="text" id="chunkSearch" class="form-control"
-                           placeholder="Search streamed chunks...">
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">RAG Upload (Streaming Chunks)</h2>
+
+        <div class="card mb-4">
+            <div class="card-header">Upload File</div>
+            <div class="card-body">
+                <input type="file" id="ragFile" class="form-control mb-3" />
+
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary" id="ragUploadBtn">Upload & Stream</button>
+                    <button class="btn btn-outline-danger" id="clearBtn">Clear</button>
                 </div>
-                <div class="col-md-4 d-grid">
-                    <button class="btn btn-outline-primary" id="toggleChunksBtn">Show All</button>
+
+                <div class="mt-3">
+                    <small class="text-muted">
+                        Calls: <code>POST /rag/upload</code> (SSE stream)
+                    </small>
                 </div>
             </div>
+        </div>
 
-            <div class="mt-3 text-muted" id="summaryBox">
-                No stream started.
+        <div class="card mb-4">
+            <div class="card-header">Controls</div>
+            <div class="card-body">
+                <div class="row g-2">
+                    <div class="col-md-8">
+                        <input type="text" id="chunkSearch" class="form-control"
+                            placeholder="Search streamed chunks...">
+                    </div>
+                    <div class="col-md-4 d-grid">
+                        <button class="btn btn-outline-primary" id="toggleChunksBtn">Show All</button>
+                    </div>
+                </div>
+
+                <div class="mt-3 text-muted" id="summaryBox">
+                    No stream started.
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">Chunk Preview (Live)</div>
+            <div class="card-body">
+                <div id="chunkList" class="chunk-list text-muted">No chunks yet.</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Raw JSON (Collected)</div>
+            <div class="card-body">
+                <pre id="rawJsonBox" class="json-box"></pre>
             </div>
         </div>
     </div>
 
-    <div class="card mb-4">
-        <div class="card-header">Chunk Preview (Live)</div>
-        <div class="card-body">
-            <div id="chunkList" class="chunk-list text-muted">No chunks yet.</div>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-header">Raw JSON (Collected)</div>
-        <div class="card-body">
-            <pre id="rawJsonBox" class="json-box"></pre>
-        </div>
-    </div>
-</div>
-
-<script src="js/bootstrap.bundle.min.js"></script>
-<script src="js/rag-upload-stream.js"></script>
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="js/rag-upload-stream.js"></script>
 </body>
+
 </html>

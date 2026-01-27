@@ -1,111 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>CSV Upload Portal</title>
 
     <!-- Bootstrap CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css"><link>
+    <link rel="stylesheet" href="css/styles.css">
+    <link>
 </head>
 
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="index.html">CSV Portal</a>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">CSV Portal</a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#mainNavbar" aria-controls="mainNavbar"
-                aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="mainNavbar">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="index.html">Uploads</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="customers.html">Customers</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="customer-profile.html">Customer Profile</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="ai-report.html">AI Report</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="rag-upload.html">RAG Upload</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="rag-upload-stream.html">RAG Upload (Stream)</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="ai-rag-report.html">AI Rag Report</a>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
-
-
-<div class="container mt-5">
-    <h2 class="text-center mb-4">CSV Upload Portal</h2>
-
-    <div class="card mb-4">
-        <div class="card-header">
-            Upload Customer CSV
-        </div>
-        <div class="card-body">
-            <input type="file" id="customerFile" class="form-control mb-3"/>
-            <button class="btn btn-primary" id="uploadCustomerBtn">
-                Upload Customer File
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+                aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
             </button>
-        </div>
-    </div>
 
-    <div class="card mb-4">
-        <div class="card-header">
-            Upload Customer Churn CSV
+            <div class="collapse navbar-collapse" id="mainNavbar">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Uploads</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="customers.html">Customers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="customer-profile.html">Customer Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="ai-report.html">AI Report</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="rag-upload.html">RAG Upload</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="rag-upload-stream.html">RAG Upload (Stream)</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="ai-rag-report.html">AI Rag Report</a>
+                    </li>
+                </ul>
+            </div>
         </div>
-        <div class="card-body">
-            <input type="file" id="churnFile" class="form-control mb-3"/>
-            <button class="btn btn-warning" id="uploadChurnBtn">
-                Upload Churn File
-            </button>
-        </div>
-    </div>
+    </nav>
 
-    <div class="card mb-4">
-        <div class="card-header">
-            Save File Only (No DB)
+
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">CSV Upload Portal</h2>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                Upload Customer CSV
+            </div>
+            <div class="card-body">
+                <input type="file" id="customerFile" class="form-control mb-3" />
+                <button class="btn btn-primary" id="uploadCustomerBtn">
+                    Upload Customer File
+                </button>
+            </div>
         </div>
-        <div class="card-body">
-            <input type="file" id="saveOnlyFile" class="form-control mb-3"/>
-            <button class="btn btn-secondary" id="saveOnlyBtn">
-                Save File Only
-            </button>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                Upload Customer Churn CSV
+            </div>
+            <div class="card-body">
+                <input type="file" id="churnFile" class="form-control mb-3" />
+                <button class="btn btn-warning" id="uploadChurnBtn">
+                    Upload Churn File
+                </button>
+            </div>
         </div>
-    </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                Save File Only (No DB)
+            </div>
+            <div class="card-body">
+                <input type="file" id="saveOnlyFile" class="form-control mb-3" />
+                <button class="btn btn-secondary" id="saveOnlyBtn">
+                    Save File Only
+                </button>
+            </div>
+        </div>
 
 
-    <div class="card">
-        <div class="card-header">
-            Server Response
-        </div>
-        <div class="card-body">
-            <div class="card">
-                <div class="card-header">Processing Stream</div>
-                <div class="card-body stream-box" id="responseBox"></div>
+        <div class="card">
+            <div class="card-header">
+                Server Response
+            </div>
+            <div class="card-body">
+                <div class="card">
+                    <div class="card-header">Processing Stream</div>
+                    <div class="card-body stream-box" id="responseBox"></div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- jQuery -->
-<script src="js/jquery-3.7.1.min.js"></script>
-<script src="js/bootstrap.bundle.min.js"></script>
-<script src="js/app.js"></script>
+    <!-- jQuery -->
+    <script src="js/jquery-3.7.1.min.js"></script>
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
 
 </body>
+
 </html>

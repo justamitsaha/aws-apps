@@ -2,10 +2,7 @@ package com.saha.amit.reporting.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.saha.amit.reporting.model.AiInteraction;
-import com.saha.amit.reporting.model.ChunkMatch;
-import com.saha.amit.reporting.model.CustomerProfile;
-import com.saha.amit.reporting.model.RetentionPlan;
+import com.saha.amit.reporting.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
@@ -245,20 +242,15 @@ public class RetentionAiService {
                     log.info("Generated RAG prompt for customerId={} (len={})", profile.customerId(), prompt.length());
 
                     // 3) Call LLM with grounded context
-                    return Mono.fromCallable(() -> chatClient.prompt()
-                                    .user(prompt)
-                                    .call()
-                                    .content()
+                    return Mono.fromCallable(() ->
+                                    chatClient.prompt()
+                                            .user(prompt)
+                                            .call()
+                                            .content()
                             )
-                            .subscribeOn(Schedulers.boundedElastic());
-                })
-                .map(this::extractJson)
-                .map(json -> {
-                    try {
-                        return objectMapper.readValue(json, RetentionPlan.class);
-                    } catch (JsonProcessingException e) {
-                        throw new RuntimeException("Invalid JSON returned by model: " + json, e);
-                    }
+                            .subscribeOn(Schedulers.boundedElastic())
+                            .map(this::extractJson)
+                            .map(json -> parsePlanAndAttachCitations(json, matches));
                 });
     }
 
@@ -301,10 +293,36 @@ public class RetentionAiService {
                     .append(String.format("%.3f", m.score()))
                     .append("\n");
 
+            sb.append("[CITATION ").append(i + 1).append("] ")
+                    .append(m.fileName())
+                    .append(" | chunk=").append(m.chunkIndex())
+                    .append("\n");
+
             sb.append(m.chunkText())
                     .append("\n\n");
         }
         return sb.toString();
+    }
+
+    private RetentionPlan parsePlanAndAttachCitations(String json, List<ChunkMatch> matches) {
+        try {
+            RetentionPlan basePlan = objectMapper.readValue(json, RetentionPlan.class);
+
+            List<Citation> citations = matches.stream()
+                    .map(m -> new Citation(m.fileName(), m.chunkIndex(), m.score()))
+                    .toList();
+
+            return new RetentionPlan(
+                    basePlan.riskLevel(),
+                    basePlan.reasoning(),
+                    basePlan.actions(),
+                    basePlan.offer(),
+                    citations
+            );
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Invalid JSON returned by model: " + json, e);
+        }
     }
 
 
