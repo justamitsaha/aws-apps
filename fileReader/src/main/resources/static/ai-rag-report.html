@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Customer Profile</title>
+    <title>AI Retention Report</title>
 
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css" />
@@ -49,10 +49,10 @@
 
 
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Customer Profile Lookup</h2>
+    <h2 class="text-center mb-4">AI Retention Report</h2>
 
     <div class="card mb-4">
-        <div class="card-header">Search</div>
+        <div class="card-header">Analyze Customer</div>
         <div class="card-body">
             <div class="row g-2 align-items-center">
                 <div class="col-md-8">
@@ -60,28 +60,28 @@
                             type="number"
                             id="customerId"
                             class="form-control"
-                            placeholder="Enter Customer ID (e.g. 15565701)"
+                            placeholder="Enter Customer ID (e.g. 15565706)"
                     />
                 </div>
                 <div class="col-md-4 d-grid">
-                    <button class="btn btn-primary" id="searchBtn">
-                        Get Customer Profile
+                    <button class="btn btn-primary" id="analyzeBtn">
+                        Get AI Report
                     </button>
                 </div>
             </div>
 
             <div class="mt-3">
                 <small class="text-muted">
-                    Calls: <code>GET /customerProfile/{customerId}</code>
+                    Calls: <code>GET http://localhost:8081/reporting/{id}/analyze</code>
                 </small>
             </div>
         </div>
     </div>
 
     <div class="card mb-4">
-        <div class="card-header">Profile Summary</div>
-        <div class="card-body">
-            <div id="summaryBox" class="text-muted">No data loaded yet.</div>
+        <div class="card-header">Report Summary</div>
+        <div class="card-body" id="reportBox">
+            <div class="text-muted">No report loaded yet.</div>
         </div>
     </div>
 
@@ -95,6 +95,7 @@
 
 <script src="js/jquery-3.7.1.min.js"></script>
 <script src="js/bootstrap.bundle.min.js"></script>
-<script src="js/customer-profile.js"></script>
+<script src="js/app.js"></script>
+<script src="js/ai-rag-report.js"></script>
 </body>
 </html>

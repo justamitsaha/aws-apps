@@ -64,15 +64,15 @@ public class CustomerProfileController {
         return customerProfileService.getFullProfile(id)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build())
-                .doOnNext(customerProfileResponseEntity -> log.info("Fetched profile for customer ID {}: {}", id, customerProfileResponseEntity));
+                .doOnNext(customerProfileResponseEntity -> log.info("Fetched profile for customer ID: {}", id));
     }
 
     @PostMapping("/recommendation")
     public Mono<ResponseEntity<AiInteraction>> saveRecommendation(@RequestBody AiInteraction aiInteraction) {
-        log.info("Received AI interaction for customer ID: {}", aiInteraction);
+        log.info("Received AI interaction for customer ID: {}", aiInteraction.customerId());
         return customerProfileService.generateAndSave(aiInteraction)
                 .map(savedInteraction -> {
-                    log.info("Saved AI interaction for customer ID {}: {}", aiInteraction.customerId(), savedInteraction.toString());
+                    log.info("Saved AI interaction for customer ID: {}", aiInteraction.customerId());
                     return ResponseEntity.ok(savedInteraction);
                 })
                 .doOnError(error -> log.error("Error saving AI interaction for customer ID {}: {}", aiInteraction.customerId(), error.getMessage()));
@@ -83,7 +83,7 @@ public class CustomerProfileController {
         log.info("Received request for recommendation for customer ID: {}", customerId);
         return customerProfileService.getRecommendation(customerId)
                 // Use log() or tap() to see the signals without manually mapping just for logs
-                .doOnNext(interaction -> log.info("Fetched interaction for {}", interaction))
+                .doOnNext(interaction -> log.info("Fetched interaction for {}", interaction.id()))
                 .map(ResponseEntity::ok)
                 // If the Mono is empty, return a 404
                 .switchIfEmpty(Mono.defer(() -> {

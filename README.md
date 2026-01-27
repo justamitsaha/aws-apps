@@ -24,6 +24,7 @@ Both services use PostgreSQL (pgvector) via R2DBC and share the same schema (`aw
 4. `reporting` calls OpenAI (Spring AI ChatClient) to generate a `RetentionPlan`.
 5. `reporting` caches the plan by saving it back to `fileReader` (`aws.ai_interactions`).
 6. For RAG, `reporting` chunks documents, embeds them, and stores chunks in pgvector.
+7. `/reporting/{id}/analyze/rag` retrieves top policy chunks and generates a RAG-based plan.
 
 ## Quickstart (local)
 
@@ -107,6 +108,7 @@ Notes:
 
 - `GET /reporting/{id}/analyze` -> returns `RetentionPlan` (uses cache when available)
 - `GET /reporting/{id}/analyze/nocache` -> always calls the model
+- `GET /reporting/{id}/analyze/rag` -> uses policy documents (RAG) to generate plan
 - `GET /reporting/health` -> proxy call to `fileReader` `/upload/health`
 
 `RetentionPlan` fields: `riskLevel`, `reasoning[]`, `actions[]`, `offer`.
@@ -131,6 +133,7 @@ Pages in `fileReader/src/main/resources/static`:
 - `customers.html` - paginated SSE viewers + cleanup
 - `customer-profile.html` - single profile lookup
 - `ai-report.html` - calls `reporting` and shows the plan
+- `ai-rag-report.html` - calls `reporting/{id}/analyze/rag` (RAG-based plan)
 - `rag-upload.html` - batch chunk upload + preview + search
 - `rag-upload-stream.html` - streaming chunk preview (SSE)
 
@@ -147,3 +150,4 @@ More UI notes: `README_UI.md`.
 2) Browse customers in `customers.html` or fetch a profile by ID.
 3) Use `ai-report.html` to generate and cache a retention plan.
 4) Upload policy docs in `rag-upload.html` and query with `/rag/search`.
+5) Use `ai-rag-report.html` for the RAG-based retention plan.

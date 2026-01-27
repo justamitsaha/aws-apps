@@ -41,4 +41,13 @@ public class ReportingController {
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
+
+    @CrossOrigin(origins = "http://localhost:8080")
+    @GetMapping("/{id}/analyze/rag")
+    public Mono<ResponseEntity<RetentionPlan>> analyzeWithRag(@PathVariable Long id) {
+        return externalApiService.fetchCustomerProfile(id)
+                .flatMap(retentionAiService::analyzeCustomerWithRAg)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
 }
