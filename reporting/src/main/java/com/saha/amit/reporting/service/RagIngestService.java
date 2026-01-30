@@ -37,7 +37,11 @@ public class RagIngestService {
                 .then();
     }
 
-    private Mono<Void> saveChunk(Long documentId, Chunk chunk) {
+    public Mono<Long> saveDocument(String fileName){
+        return repository.insertDocument(fileName);
+    }
+
+    public Mono<Void> saveChunk(Long documentId, Chunk chunk) {
         return embeddingService.embedAsync(chunk.text())
                 .map(embeddingService::toPgVectorLiteral)
                 .flatMap(literal ->

@@ -124,7 +124,7 @@ public class RagChunkService {
 
 
 
-    public Flux<Chunk> chunkUploadedFile2(FilePart filePart) {
+    /*public Flux<Chunk> chunkUploadedFile2(FilePart filePart) {
         StringDecoder decoder = StringDecoder.allMimeTypes();
 
         return decoder.decode(filePart.content(), ResolvableType.forClass(String.class), null, Collections.emptyMap())
@@ -153,13 +153,71 @@ public class RagChunkService {
                 // 3. IMPORTANT: Handle the very last piece when the file stream ends
                 .concatWith(Flux.defer(() -> Flux.empty())) // Placeholder for logic below
                 .doOnNext(chunk -> log.info("Emitting chunk {}", chunk));
+    }*/
+
+    public Flux<Chunk> chunkUploadedFileRag(FilePart filePart) {
+
+        StringDecoder decoder = StringDecoder.allMimeTypes();
+
+        return decoder
+                .decode(filePart.content(), ResolvableType.forClass(String.class), null, Collections.emptyMap())
+                // Accumulate text and extract chunks incrementally
+                .scan(new ChunkState(), (state, segment) -> {
+
+                    state.readyToEmit.clear();
+                    state.buffer.append(segment);
+
+                    while (state.buffer.length() >= chunkSize) {
+                        int end = calculateEnd(state.buffer.toString());
+
+                        String chunkText = state.buffer.substring(0, end).trim();
+                        if (!chunkText.isEmpty()) {
+                            state.readyToEmit.add(new Chunk(state.lastIndex++, chunkText));
+                        }
+
+                        // Slide window with overlap
+                        int keepFrom = Math.max(0, end - overlap);
+                        state.buffer.delete(0, keepFrom);
+                    }
+
+                    return state;
+                })
+                // Emit chunks found during streaming
+                .flatMapIterable(state -> state.readyToEmit)
+                // Emit remaining buffer after stream completes (CRITICAL FIX)
+                .concatWith(Flux.defer(() -> {
+                    ChunkState state = ChunkState.last();
+                    if (state != null && !state.buffer.isEmpty()) {
+                        String finalChunk = state.buffer.toString().trim();
+                        if (!finalChunk.isEmpty()) {
+                            return Flux.just(new Chunk(state.lastIndex, finalChunk));
+                        }
+                    }
+                    return Flux.empty();
+                }))
+                .doOnNext(chunk ->
+                        log.info("Emitting chunk index={} size={}", chunk.index(), chunk.text().length())
+                );
     }
 
+
     private static class ChunkState {
-        String buffer = "";
+
+        static ChunkState LAST;
+
+        StringBuilder buffer = new StringBuilder();
         int lastIndex = 0;
         List<Chunk> readyToEmit = new ArrayList<>();
+
+        ChunkState() {
+            LAST = this;
+        }
+
+        static ChunkState last() {
+            return LAST;
+        }
     }
+
 
     private int calculateEnd(String text) {
         int end = Math.min(chunkSize, text.length());

@@ -28,7 +28,6 @@ public class RagUploadController {
     }
 
 
-
     /**
      * Upload a file and return the chunks of that file.
      * Request must be multipart/form-data with key "file"
@@ -56,14 +55,25 @@ public class RagUploadController {
 
     @CrossOrigin(origins = "http://localhost:8080")
     @PostMapping(
-            value = "/upload2",
+            value = "/upload/rag",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            produces = MediaType.TEXT_EVENT_STREAM_VALUE // or MediaType.APPLICATION_NDJSON_VALUE
+            produces = MediaType.TEXT_EVENT_STREAM_VALUE
     )
-    public Flux<Chunk> upload3(@RequestPart("file") FilePart filePart) {
+    public Flux<Chunk> chunkUploadedFileRag(@RequestPart("file") FilePart filePart) {
+
         log.info("Received file: {}", filePart.filename());
-        return ragChunkService.chunkUploadedFile2(filePart);
+
+        return ragIngestService.saveDocument(filePart.filename())
+                .flatMapMany(documentId ->
+                        ragChunkService.chunkUploadedFileRag(filePart)
+                                .flatMap(chunk ->
+                                        ragIngestService
+                                                .saveChunk(documentId, chunk)
+                                                .thenReturn(chunk) // emit only after persistence
+                                )
+                );
     }
+
 }
 
 

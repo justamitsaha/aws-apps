@@ -41,7 +41,7 @@ async function uploadAndStream() {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await fetch(`${BASE_URL}/rag/upload2`, {
+    const response = await fetch(`${BASE_URL}/rag/upload/rag`, {
         method: "POST",
         body: formData
     });
