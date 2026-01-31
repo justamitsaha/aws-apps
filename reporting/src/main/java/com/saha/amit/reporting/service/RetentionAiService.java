@@ -185,7 +185,7 @@ public class RetentionAiService {
         String ragQuery = buildRagQuery(profile);
 
         // 2) Retrieve top chunks from vector DB
-        return ragIngestService.search(ragQuery, 5)
+        return ragIngestService.search(ragQuery, 5, true)
                 .collectList()
                 .flatMap(matches -> {
 

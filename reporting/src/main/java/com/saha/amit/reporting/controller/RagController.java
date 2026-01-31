@@ -1,9 +1,14 @@
 package com.saha.amit.reporting.controller;
 
+
 import com.saha.amit.reporting.model.Chunk;
 import com.saha.amit.reporting.model.ChunkMatch;
+import com.saha.amit.reporting.model.RetentionPlan;
+import com.saha.amit.reporting.service.ExternalApiService;
 import com.saha.amit.reporting.service.RagChunkService;
 import com.saha.amit.reporting.service.RagIngestService;
+import com.saha.amit.reporting.service.RetentionAiService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,57 +17,38 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-
 @Slf4j
 @RestController
 @RequestMapping("/rag")
-public class RagUploadController {
+@RequiredArgsConstructor
+public class RagController {
 
+    private final ExternalApiService externalApiService;
     private final RagChunkService ragChunkService;
     private final RagIngestService ragIngestService;
 
-    public RagUploadController(RagChunkService ragChunkService, RagIngestService ragIngestService) {
-        this.ragChunkService = ragChunkService;
-        this.ragIngestService = ragIngestService;
+    @GetMapping("/health")
+    public Mono<ResponseEntity<String>> healthCheck() {
+        return externalApiService.fetchExternalData("/upload/health")
+                .map(ResponseEntity::ok) // Wrap data in 200 OK
+                .defaultIfEmpty(ResponseEntity.notFound().build()); // Handle empty case
     }
 
 
     /**
-     * Upload a file and return the chunks of that file.
+     * Upload a RAG document and return the chunks as they are processed. This is not related to customer retention.
+     * But general RAG document ingestion endpoint.
      * Request must be multipart/form-data with key "file"
-     * Example: curl -X POST http://localhost:8081/rag/upload -F "file=@offers_catalog.md"
+     * Example: curl -X POST http://localhost:8081/rag/upload/rag -F "file=@sample_rag_doc.md"
      */
     @CrossOrigin(origins = "http://localhost:8080")
-    @PostMapping(value = "/upload", consumes = "multipart/form-data")
-    public Mono<ResponseEntity<List<Chunk>>> upload(@RequestPart("file") FilePart filePart) {
-        return ragChunkService.chunkUploadedFile(filePart)
-                .flatMap(chunks ->
-                        // save to DB using the same filePart OR using chunks (recommended)
-                        ragIngestService.ingestChunks(filePart.filename(), chunks)
-                                .thenReturn(ResponseEntity.ok(chunks))
-                );
-    }
-
-    @CrossOrigin(origins = "http://localhost:8080")
-    @GetMapping("/search")
-    public Flux<ChunkMatch> search(
-            @RequestParam("q") String q,
-            @RequestParam(name = "topK", defaultValue = "5") int topK
-    ) {
-        return ragIngestService.search(q, topK);
-    }
-
-    @CrossOrigin(origins = "http://localhost:8080")
     @PostMapping(
-            value = "/upload/rag",
+            value = "/upload",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.TEXT_EVENT_STREAM_VALUE
     )
     public Flux<Chunk> chunkUploadedFileRag(@RequestPart("file") FilePart filePart) {
-
         log.info("Received file: {}", filePart.filename());
-
         return ragIngestService.saveDocument(filePart.filename())
                 .flatMapMany(documentId ->
                         ragChunkService.chunkUploadedFileRag(filePart)
@@ -74,6 +60,17 @@ public class RagUploadController {
                 );
     }
 
+
+    /**
+     * Search the ingested policy documents for relevant chunks.
+     * Example: curl -X GET "http://localhost:8081/retention/policySearch?q=discount+offers&topK=3"
+     */
+    @CrossOrigin(origins = "http://localhost:8080")
+    @GetMapping("/search")
+    public Flux<ChunkMatch> ragSearch(
+            @RequestParam("q") String q,
+            @RequestParam(name = "topK", defaultValue = "5") int topK
+    ) {
+        return ragIngestService.search(q, topK, false);
+    }
 }
-
-

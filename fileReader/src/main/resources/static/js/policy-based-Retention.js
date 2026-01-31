@@ -12,7 +12,7 @@ $("#analyzeBtn").click(function () {
   $("#rawJsonBox").text("");
 
   $.ajax({
-    url: `${AI_BASE_URL}/reporting/${id}/analyze`,
+    url: `${AI_BASE_URL}/retention/${id}/analyze/rag`,
     method: "GET",
     success: function (data) {
       renderReport(data);
@@ -58,46 +58,59 @@ function renderReport(r) {
     </div>
   `;
 
+  const citationsHtml = renderCitations(r.citations);
+
   $("#reportBox").html(`
-    <div class="row g-3">
-      <div class="col-md-4">
-        <div class="summary-item">
-          <div class="label">Risk Level</div>
-          <div class="value">${riskBadge}</div>
-        </div>
+  <div class="row g-3">
+    <div class="col-md-4">
+      <div class="summary-item">
+        <div class="label">Risk Level</div>
+        <div class="value">${riskBadge}</div>
       </div>
+    </div>
 
-      <div class="col-12">
-        <hr/>
-        <div class="summary-item">
-          <div class="label">Reasoning</div>
-          <div class="value">
-            <ul class="mb-0">${reasoningHtml || "<li>-</li>"}</ul>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-12">
-        <hr/>
-        <div class="summary-item">
-          <div class="label">Recommended Actions</div>
-          <div class="value">
-            ${actionsHtml || "<div class='text-muted'>No actions</div>"}
-          </div>
-        </div>
-      </div>
-
-      <div class="col-12">
-        <hr/>
-        <div class="summary-item">
-          <div class="label">Offer</div>
-          <div class="value">
-            ${offerHtml}
-          </div>
+    <div class="col-12">
+      <hr/>
+      <div class="summary-item">
+        <div class="label">Reasoning</div>
+        <div class="value">
+          <ul class="mb-0">${reasoningHtml || "<li>-</li>"}</ul>
         </div>
       </div>
     </div>
-  `);
+
+    <div class="col-12">
+      <hr/>
+      <div class="summary-item">
+        <div class="label">Recommended Actions</div>
+        <div class="value">
+          ${actionsHtml || "<div class='text-muted'>No actions</div>"}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <hr/>
+      <div class="summary-item">
+        <div class="label">Offer</div>
+        <div class="value">
+          ${offerHtml}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <hr/>
+      <div class="summary-item">
+        <div class="label">Citations (RAG Evidence)</div>
+        <div class="value">
+          ${citationsHtml}
+        </div>
+      </div>
+    </div>
+  </div>
+`);
+
 }
 
 function riskBadgeHtml(level) {
@@ -122,4 +135,33 @@ function escapeHtml(str) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function renderCitations(citations) {
+  if (!citations || citations.length === 0) {
+    return `<div class="text-muted">No citations available.</div>`;
+  }
+
+  return `
+    <div class="list-group">
+      ${citations.map((c, i) => `
+        <div class="list-group-item">
+          <div class="d-flex justify-content-between align-items-center">
+            <strong>${escapeHtml(c.fileName)}</strong>
+            <span class="badge bg-info text-dark">
+              Score: ${formatScore(c.score)}
+            </span>
+          </div>
+          <div class="text-muted mt-1">
+            Chunk Index: <strong>${c.chunkIndex}</strong>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function formatScore(score) {
+  if (score === null || score === undefined) return "-";
+  return Number(score).toFixed(4);
 }

@@ -10,7 +10,8 @@ CREATE EXTENSION IF NOT EXISTS vector;
 CREATE TABLE IF NOT EXISTS aws.documents (
   id BIGSERIAL PRIMARY KEY,
   file_name TEXT NOT NULL,
-  content TEXT,
+  document_type TEXT NOT NULL,
+  content_type TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

@@ -15,13 +15,15 @@ public class RagIngestRepository {
         this.client = client;
     }
 
-    public Mono<Long> insertDocument(String fileName) {
+    public Mono<Long> insertDocument(String fileName, String doctype, String contentType) {
         return client.sql("""
-                        INSERT INTO aws.documents(file_name)
-                        VALUES (:fileName)
+                        INSERT INTO aws.documents(file_name, document_type, content_type)
+                        VALUES (:fileName, :doctype, :contentType )
                         RETURNING id
                         """)
                 .bind("fileName", fileName)
+                .bind("doctype", doctype)
+                .bind("contentType", contentType)
                 .map(row -> row.get("id", Long.class))
                 .one();
     }
@@ -39,7 +41,7 @@ public class RagIngestRepository {
     }
 
 
-    public Flux<ChunkMatch> searchSimilarChunks(String queryEmbeddingLiteral, int topK) {
+    public Flux<ChunkMatch> searchSimilarChunks(String queryEmbeddingLiteral, int topK, String documentType) {
         return client.sql("""
                         SELECT
                             c.id AS chunk_id,
@@ -50,11 +52,13 @@ public class RagIngestRepository {
                             1 - (c.embedding OPERATOR(public.<=>) CAST(:q AS public.vector(1536))) AS score
                         FROM aws.document_chunks c
                         JOIN aws.documents d ON d.id = c.document_id
+                        WHERE d.document_type = :documentType
                         ORDER BY c.embedding OPERATOR(public.<=>) CAST(:q AS public.vector(1536))
                         LIMIT :topK
                         """)
                 .bind("q", queryEmbeddingLiteral)
                 .bind("topK", topK)
+                .bind("documentType", documentType)
                 .map((row, meta) -> new ChunkMatch(
                         row.get("chunk_id", Long.class),
                         row.get("document_id", Long.class),

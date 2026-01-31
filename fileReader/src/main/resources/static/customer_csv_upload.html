@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Customers</title>
+    <title>CSV Upload Portal</title>
 
     <!-- Bootstrap CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -49,58 +49,65 @@
         </div>
     </nav>
 
+
     <div class="container mt-5">
-        <h2 class="mb-4 text-center">Customer Management</h2>
-        <div class="mb-3 text-center">
-            <div class="mb-3">
-                <div class="row g-2 align-items-center">
+        <h2 class="text-center mb-4">CSV Upload Portal</h2>
 
-                    <div class="col-md-3">
-                        <label class="form-label mb-1">Dataset</label>
-                        <select id="datasetSelect" class="form-select">
-                            <option value="customers" selected>Customers</option>
-                            <option value="customersChurn">Customers Churn</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label mb-1">Page</label>
-                        <input type="number" id="pageInput" class="form-control" value="0" min="0">
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label mb-1">Size</label>
-                        <input type="number" id="sizeInput" class="form-control" value="10" min="1">
-                    </div>
-
-                    <div class="col-md-3 d-flex gap-2 mt-4 mt-md-0 justify-content-md-end">
-                        <button class="btn btn-secondary" id="prevBtn">Prev</button>
-                        <button class="btn btn-success" id="loadCustomersBtn">Load Page</button>
-                        <button class="btn btn-secondary" id="nextBtn">Next</button>
-                    </div>
-                </div>
+        <div class="card mb-4">
+            <div class="card-header">
+                Upload Customer CSV
             </div>
-
-            <div class="mb-3 text-end">
-                <button class="btn btn-danger" id="cleanupBtn">Delete All</button>
+            <div class="card-body">
+                <input type="file" id="customerFile" class="form-control mb-3" />
+                <button class="btn btn-primary" id="uploadCustomerBtn">
+                    Upload Customer File
+                </button>
             </div>
-
-
-
-
         </div>
-        <div class="text-muted mb-2" id="pageInfo"></div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                Upload Customer Churn CSV
+            </div>
+            <div class="card-body">
+                <input type="file" id="churnFile" class="form-control mb-3" />
+                <button class="btn btn-warning" id="uploadChurnBtn">
+                    Upload Churn File
+                </button>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                Save File Only (No DB)
+            </div>
+            <div class="card-body">
+                <input type="file" id="saveOnlyFile" class="form-control mb-3" />
+                <button class="btn btn-secondary" id="saveOnlyBtn">
+                    Save File Only
+                </button>
+            </div>
+        </div>
+
 
         <div class="card">
-            <div class="card-header">Customer Stream</div>
-            <div class="card-body stream-box" id="customerStream"></div>
+            <div class="card-header">
+                Server Response
+            </div>
+            <div class="card-body">
+                <div class="card">
+                    <div class="card-header">Processing Stream</div>
+                    <div class="card-body stream-box" id="responseBox"></div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <script src="js/customers.js"></script>
+    <!-- jQuery -->
     <script src="js/jquery-3.7.1.min.js"></script>
     <script src="js/bootstrap.bundle.min.js"></script>
-    <!--<script src="js/app.js"></script>-->
+    <script src="js/customer_csv_upload.js"></script>
+
 </body>
 
 </html>

@@ -24,7 +24,7 @@ $("#ragUploadBtn").click(function () {
     formData.append("file", file);
 
     $.ajax({
-        url: `${BASE_URL}/rag/upload`,
+        url: `${BASE_URL}/retention/policyUpload`,
         method: "POST",
         data: formData,
         processData: false,
@@ -126,7 +126,7 @@ $("#ragSearchBtn").click(function () {
     $("#searchResults").html("<span class='text-muted'>Searching...</span>");
 
     $.ajax({
-        url: `${BASE_URL}/rag/search?q=${encodeURIComponent(q)}&topK=${topK}`,
+        url: `${BASE_URL}/retention/policySearch?q=${encodeURIComponent(q)}&topK=${topK}`,
         method: "GET",
         success: function (matches) {
             renderSearchResults(matches);

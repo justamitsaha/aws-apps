@@ -3,7 +3,7 @@
 This repo contains two Spring Boot WebFlux services that work together:
 
 - `fileReader` (port 8080): CSV ingestion, customer profile APIs, and static UI.
-- `reporting` (port 8081): AI retention analysis + RAG ingestion/search.
+- `reporting` (port 8081): AI retention analysis + RAG ingestion/search (now split by domain).
 
 Both services use PostgreSQL (pgvector) via R2DBC and share the same schema (`aws`).
 
@@ -23,8 +23,8 @@ Both services use PostgreSQL (pgvector) via R2DBC and share the same schema (`aw
 3. `reporting` calls `fileReader` to fetch a combined `CustomerProfile`.
 4. `reporting` calls OpenAI (Spring AI ChatClient) to generate a `RetentionPlan`.
 5. `reporting` caches the plan by saving it back to `fileReader` (`aws.ai_interactions`).
-6. For RAG, `reporting` chunks documents, embeds them, and stores chunks in pgvector.
-7. `/reporting/{id}/analyze/rag` retrieves top policy chunks and generates a RAG-based plan.
+6. For general RAG, `reporting` chunks documents, embeds them, and stores chunks in pgvector.
+7. For retention RAG, policy documents are indexed and used to ground retention analysis.
 
 ## Quickstart (local)
 
@@ -104,20 +104,21 @@ Notes:
 
 ## Service: reporting (port 8081)
 
-### AI retention analysis
+### Customer retention APIs
 
-- `GET /reporting/{id}/analyze` -> returns `RetentionPlan` (uses cache when available)
-- `GET /reporting/{id}/analyze/nocache` -> always calls the model
-- `GET /reporting/{id}/analyze/rag` -> uses policy documents (RAG) to generate plan
-- `GET /reporting/health` -> proxy call to `fileReader` `/upload/health`
+- `GET /retention/{id}/analyze` -> returns `RetentionPlan` (uses cache when available)
+- `GET /retention/{id}/analyze/nocache` -> always calls the model
+- `GET /retention/{id}/analyze/rag` -> policy-grounded retention plan
+- `POST /retention/policyUpload` -> chunk + embed + store policy docs
+- `GET /retention/policySearch?q=...&topK=...` -> semantic search over policy docs
+- `GET /rag/health` -> proxy call to `fileReader` `/upload/health`
 
 `RetentionPlan` fields: `riskLevel`, `reasoning[]`, `actions[]`, `offer`.
 
-### RAG ingestion + search
+### General RAG ingestion + search
 
-- `POST /rag/upload` (multipart `file`) -> chunk + embed + store in pgvector
+- `POST /rag/upload` (multipart `file`) -> streaming chunk + embed + store in pgvector
 - `GET /rag/search?q=...&topK=...` -> semantic search results
-- `POST /rag/upload2` -> streaming chunk preview (does not persist)
 
 Chunking uses overlap; embeddings are stored as `vector(1536)`.
 
@@ -129,13 +130,13 @@ Chunking uses overlap; embeddings are stored as `vector(1536)`.
 
 Pages in `fileReader/src/main/resources/static`:
 
-- `index.html` - CSV upload portal (SSE logs)
+- `index.html` - general RAG upload + streaming chunk preview + vector search
+- `customer_csv_upload.html` - CSV upload portal (SSE logs)
 - `customers.html` - paginated SSE viewers + cleanup
 - `customer-profile.html` - single profile lookup
-- `ai-report.html` - calls `reporting` and shows the plan
-- `ai-rag-report.html` - calls `reporting/{id}/analyze/rag` (RAG-based plan)
-- `rag-upload.html` - batch chunk upload + preview + search
-- `rag-upload-stream.html` - streaming chunk preview (SSE)
+- `customer-Retention.html` - calls `/retention/{id}/analyze`
+- `policy-upload.html` - retention policy upload + search
+- `policy-based-Retention.html` - calls `/retention/{id}/analyze/rag`
 
 More UI notes: `README_UI.md`.
 
@@ -146,8 +147,9 @@ More UI notes: `README_UI.md`.
 
 ## Typical flow
 
-1) Upload both CSVs in `index.html`.
+1) Upload both CSVs in `customer_csv_upload.html`.
 2) Browse customers in `customers.html` or fetch a profile by ID.
-3) Use `ai-report.html` to generate and cache a retention plan.
-4) Upload policy docs in `rag-upload.html` and query with `/rag/search`.
-5) Use `ai-rag-report.html` for the RAG-based retention plan.
+3) Use `customer-Retention.html` to generate and cache a retention plan.
+4) Upload policy docs in `policy-upload.html` and query with `/retention/policySearch`.
+5) Use `policy-based-Retention.html` for the RAG-based retention plan.
+6) For non-retention docs, use `index.html` and `/rag/search`.

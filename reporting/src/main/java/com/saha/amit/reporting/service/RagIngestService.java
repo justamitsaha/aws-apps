@@ -25,7 +25,7 @@ public class RagIngestService {
     }
 
     public Mono<Void> ingestChunks(String fileName, List<Chunk> chunks) {
-        return repository.insertDocument(fileName)
+        return repository.insertDocument(fileName, "RETENTION_POLICY", "text/markdown")
                 .flatMapMany(documentId ->
                         Flux.fromIterable(chunks)
                                 .concatMap(chunk -> saveChunk(documentId, chunk)
@@ -38,7 +38,7 @@ public class RagIngestService {
     }
 
     public Mono<Long> saveDocument(String fileName){
-        return repository.insertDocument(fileName);
+        return repository.insertDocument(fileName, "RAG_DOCUMENT", "text/markdown");
     }
 
     public Mono<Void> saveChunk(Long documentId, Chunk chunk) {
@@ -55,10 +55,16 @@ public class RagIngestService {
                 .then();
     }
 
-    public Flux<ChunkMatch> search(String query, int topK) {
+    public Flux<ChunkMatch> search(String query, int topK, boolean docTypeFlag) {
         return embeddingService.embedAsync(query)
                 .map(embeddingService::toPgVectorLiteral)
-                .flatMapMany(literal -> repository.searchSimilarChunks(literal, topK));
+                .flatMapMany(literal -> repository.searchSimilarChunks(literal, topK, docTypeFlag? "RETENTION_POLICY":"RAG_DOCUMENT"));
+    }
+
+    public Flux<ChunkMatch> ragSearch(String query, int topK, boolean docTypeFlag) {
+        return embeddingService.embedAsync(query)
+                .map(embeddingService::toPgVectorLiteral)
+                .flatMapMany(literal -> repository.searchSimilarChunks(literal, topK, docTypeFlag? "RETENTION_POLICY":"RAG_DOCUMENT"));
     }
 }
 
