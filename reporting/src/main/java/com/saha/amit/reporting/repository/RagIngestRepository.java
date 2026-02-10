@@ -1,10 +1,13 @@
 package com.saha.amit.reporting.repository;
 
 import com.saha.amit.reporting.model.ChunkMatch;
+import com.saha.amit.reporting.model.DocumentSummary;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.time.Instant;
 
 @Repository
 public class RagIngestRepository {
@@ -69,6 +72,64 @@ public class RagIngestRepository {
                 ))
                 .all();
     }
+
+    public Flux<DocumentSummary> findAllDocuments() {
+        return client.sql("""
+                SELECT
+                    id,
+                    file_name,
+                    document_type,
+                    content_type,
+                    created_at
+                FROM aws.documents
+                ORDER BY created_at DESC
+                """)
+                .map((row, meta) -> new DocumentSummary(
+                        row.get("id", Long.class),
+                        row.get("file_name", String.class),
+                        row.get("document_type", String.class),
+                        row.get("content_type", String.class),
+                        row.get("created_at", Instant.class)
+                ))
+                .all();
+    }
+
+
+    public Flux<ChunkMatch> searchChunksByDocument(
+            Long documentId,
+            String queryEmbeddingLiteral,
+            int topK
+    ) {
+        return client.sql("""
+            SELECT
+                c.id AS chunk_id,
+                c.document_id,
+                d.file_name,
+                c.chunk_index,
+                c.chunk_text,
+                1 - (c.embedding OPERATOR(public.<=>)
+                     CAST(:q AS public.vector(1536))) AS score
+            FROM aws.document_chunks c
+            JOIN aws.documents d ON d.id = c.document_id
+            WHERE c.document_id = :documentId
+            ORDER BY c.embedding OPERATOR(public.<=>)
+                     CAST(:q AS public.vector(1536))
+            LIMIT :topK
+            """)
+                .bind("documentId", documentId)
+                .bind("q", queryEmbeddingLiteral)
+                .bind("topK", topK)
+                .map((row, meta) -> new ChunkMatch(
+                        row.get("chunk_id", Long.class),
+                        row.get("document_id", Long.class),
+                        row.get("file_name", String.class),
+                        row.get("chunk_index", Integer.class),
+                        row.get("chunk_text", String.class),
+                        row.get("score", Double.class)
+                ))
+                .all();
+    }
+
 
 
 }

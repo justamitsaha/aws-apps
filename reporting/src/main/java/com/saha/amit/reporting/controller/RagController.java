@@ -1,9 +1,7 @@
 package com.saha.amit.reporting.controller;
 
 
-import com.saha.amit.reporting.model.Chunk;
-import com.saha.amit.reporting.model.ChunkMatch;
-import com.saha.amit.reporting.model.RetentionPlan;
+import com.saha.amit.reporting.model.*;
 import com.saha.amit.reporting.service.ExternalApiService;
 import com.saha.amit.reporting.service.RagChunkService;
 import com.saha.amit.reporting.service.RagIngestService;
@@ -73,4 +71,29 @@ public class RagController {
     ) {
         return ragIngestService.search(q, topK, false);
     }
+
+    @CrossOrigin(origins = "http://localhost:8080")
+    @GetMapping("/documents")
+    public Flux<DocumentSummary> getAllDocuments() {
+        return ragIngestService.getAllDocuments();
+    }
+
+    @CrossOrigin(origins = "http://localhost:8080")
+    @PostMapping("/{documentId}/ask")
+    public Mono<ResponseEntity<DocumentAnswer>> askDocument(
+            @PathVariable Long documentId,
+            @RequestBody DocumentQuestionRequest request
+    ) {
+        if (request.question() == null || request.question().isBlank()) {
+            return Mono.just(ResponseEntity.badRequest().build());
+        }
+
+        return ragIngestService.askDocument(documentId, request.question())
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
+
+
+
+
 }

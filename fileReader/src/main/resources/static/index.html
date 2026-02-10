@@ -62,25 +62,6 @@
             </div>
         </div>
 
-        <!-- Local chunk controls -->
-        <div class="card mb-4">
-            <div class="card-header">Local Chunk Filter</div>
-            <div class="card-body">
-                <div class="row g-2">
-                    <div class="col-md-8">
-                        <input type="text" id="chunkSearch" class="form-control"
-                            placeholder="Search inside streamed chunks...">
-                    </div>
-                    <div class="col-md-4 d-grid">
-                        <button class="btn btn-outline-primary" id="toggleChunksBtn">Show All</button>
-                    </div>
-                </div>
-
-                <div class="mt-3 text-muted" id="summaryBox">
-                    No stream started.
-                </div>
-            </div>
-        </div>
 
         <!-- Chunk preview -->
         <div class="card mb-4">
@@ -121,6 +102,53 @@
                 <hr />
 
                 <div id="searchResults" class="text-muted">No search yet.</div>
+            </div>
+        </div>
+
+        <!-- Document Selector -->
+        <div class="card mb-4">
+            <div class="card-header">Available Documents</div>
+            <div class="card-body">
+
+                <select id="documentSelect" class="form-select">
+                    <option value="">Loading documents...</option>
+                </select>
+
+                <div class="mt-2 text-muted">
+                    Loaded from <code>GET /rag/documents</code>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- RAG Ask Document -->
+        <div class="card mb-4">
+            <div class="card-header">Ask a Document (RAG)</div>
+            <div class="card-body">
+
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-9">
+                        <input type="text" id="docQuestion" class="form-control"
+                            placeholder="Ask a question about the selected document">
+                    </div>
+
+                    <div class="col-md-3 d-grid">
+                        <button class="btn btn-primary" id="askDocBtn">
+                            Ask Document
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-3 text-muted">
+                    Uses selected document from dropdown and calls:
+                    <code>POST /rag/{documentId}/ask</code>
+                </div>
+
+                <hr />
+
+                <div id="docAnswerBox" class="text-muted">
+                    No question asked yet.
+                </div>
             </div>
         </div>
 

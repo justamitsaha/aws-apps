@@ -3,6 +3,40 @@ const BASE_URL = "http://localhost:8081";
 let allChunks = [];
 let showAll = false;
 
+$(document).ready(function () {
+    loadDocuments();
+});
+
+function loadDocuments() {
+    $.ajax({
+        url: `${BASE_URL}/rag/documents`,
+        method: "GET",
+        success: function (docs) {
+            const select = $("#documentSelect");
+            select.empty();
+
+            if (!docs || docs.length === 0) {
+                select.append(`<option value="">No documents found</option>`);
+                return;
+            }
+
+            docs.forEach(d => {
+                select.append(`
+                    <option value="${d.id}">
+                        ${d.fileName} (${d.documentType})
+                    </option>
+                `);
+            });
+        },
+        error: function () {
+            $("#documentSelect").html(
+                `<option value="">Failed to load documents</option>`
+            );
+        }
+    });
+}
+
+
 /* ---------------- Upload & Stream ---------------- */
 
 $("#ragUploadBtn").click(uploadAndStream);
@@ -179,4 +213,94 @@ function escapeHtml(str) {
 function formatScore(score) {
     if (score === null || score === undefined) return "-";
     return Number(score).toFixed(4);
+}
+
+
+$("#askDocBtn").click(askDocument);
+$("#docQuestion").on("keypress", function (e) {
+    if (e.which === 13) askDocument();
+});
+
+function askDocument() {
+    const documentId = $("#documentSelect").val();
+    const question = ($("#docQuestion").val() || "").trim();
+
+    if (!documentId) {
+        alert("Please select a document first");
+        return;
+    }
+
+    if (!question) {
+        alert("Please enter a question");
+        return;
+    }
+
+    $("#docAnswerBox").html("<span class='text-muted'>Thinking...</span>");
+
+    $.ajax({
+        url: `${BASE_URL}/rag/${documentId}/ask`,
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+            question: question
+        }),
+        success: function (resp) {
+            renderDocumentAnswer(resp);
+        },
+        error: function (xhr) {
+            if (xhr.status === 404) {
+                $("#docAnswerBox").html(
+                    "<span class='text-warning'>Document not found</span>"
+                );
+            } else {
+                $("#docAnswerBox").html(
+                    `<span class="text-danger">Failed (HTTP ${xhr.status})</span>`
+                );
+            }
+        }
+    });
+}
+
+function renderDocumentAnswer(resp) {
+    if (!resp) {
+        $("#docAnswerBox").html("<span class='text-warning'>No response</span>");
+        return;
+    }
+
+    const answerHtml = `
+        <div class="mb-3">
+            <div class="fw-bold mb-1">Answer</div>
+            <div class="border rounded p-3 bg-light">
+                ${escapeHtml(resp.answer || "-")}
+            </div>
+        </div>
+    `;
+
+    const sources = resp.sources || [];
+
+    const sourcesHtml = sources.length === 0
+        ? `<div class="text-muted">No source chunks returned</div>`
+        : `
+            <div class="fw-bold mb-2">Sources</div>
+            ${sources.map((s, i) => `
+                <div class="chunk-item mb-2">
+                    <div class="d-flex justify-content-between">
+                        <strong>Source #${i + 1}</strong>
+                        ${s.score !== undefined
+                ? `<span class="badge bg-info text-dark">Score: ${formatScore(s.score)}</span>`
+                : ""}
+                    </div>
+
+                    <div class="text-muted mt-1">
+                        Chunk Index: ${s.chunkIndex ?? "-"}
+                    </div>
+
+                    <div class="chunk-text mt-2">
+                        ${escapeHtml(trimText(s.text || "", 800))}
+                    </div>
+                </div>
+            `).join("")}
+        `;
+
+    $("#docAnswerBox").html(answerHtml + sourcesHtml);
 }
