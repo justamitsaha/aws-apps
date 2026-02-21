@@ -39,7 +39,6 @@ public class CustomerRetentionController {
      * if not found in cache, will call AI service.
      * Example: curl -X GET "http://localhost:8081/retention/123/analyze"
      */
-    @CrossOrigin(origins = "http://localhost:8080")
     @GetMapping("/{id}/analyze")
     public Mono<ResponseEntity<RetentionPlan>> analyze(@PathVariable Long id) {
         return retentionAiService.analyzeCustomer(id)
@@ -51,7 +50,6 @@ public class CustomerRetentionController {
      * Analyze customer retention plan using AI service without cache.
      * Example: curl -X GET "http://localhost:8081/retention/123/analyze/nocache"
      */
-    @CrossOrigin(origins = "http://localhost:8080")
     @GetMapping("/{id}/analyze/nocache")
     public Mono<ResponseEntity<RetentionPlan>> analyzeNoCache(@PathVariable Long id) {
         return retentionAiService.analyzeCustomerWithoutCache(id)
@@ -64,7 +62,6 @@ public class CustomerRetentionController {
      * Request must be multipart/form-data with key "file"
      * Example: curl -X POST http://localhost:8081/retention/policyUpload -F "file=@offers_catalog.md"
      */
-    @CrossOrigin(origins = "http://localhost:8080")
     @PostMapping(value = "/policyUpload", consumes = "multipart/form-data")
     public Mono<ResponseEntity<List<Chunk>>> upload(@RequestPart("file") FilePart filePart) {
         return ragChunkService.chunkUploadedFile(filePart)
@@ -79,7 +76,6 @@ public class CustomerRetentionController {
      * Search the ingested policy documents for relevant chunks.
      * Example: curl -X GET "http://localhost:8081/retention/policySearch?q=discount+offers&topK=3"
      */
-    @CrossOrigin(origins = "http://localhost:8080")
     @GetMapping("/policySearch")
     public Flux<ChunkMatch> search(
             @RequestParam("q") String q,
@@ -94,7 +90,6 @@ public class CustomerRetentionController {
      * provide context to AI service.
      * Example: curl -X GET "http://localhost:8081/retention/123/analyze/rag"
      */
-    @CrossOrigin(origins = "http://localhost:8080")
     @GetMapping("/{id}/analyze/rag")
     public Mono<ResponseEntity<RetentionPlan>> analyzeWithRag(@PathVariable Long id) {
         return externalApiService.fetchCustomerProfile(id)

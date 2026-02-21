@@ -20,6 +20,7 @@ The system is designed to explore reactive data ingestion, AI reasoning, and RAG
 - RAG document ingestion with chunking + embeddings (general and retention-specific).
 - Semantic search across ingested documents.
 - RAG-based retention analysis endpoint (`/retention/{id}/analyze/rag`).
+- General document Q&A via `/rag/search`.
 
 ## Technology used
 
@@ -39,7 +40,7 @@ Purpose: upload any document (non-retention), stream chunks, and do vector searc
 
 - Upload a document and click **Upload & Stream**.
 - Live chunks appear in the preview.
-- Use the **RAG Search** box to run `/rag/search`.
+- Use the **RAG Search** box to ask questions over the uploaded content (`/rag/search`).
 
 ### 2) CSV Uploads (`customer_csv_upload.html`)
 

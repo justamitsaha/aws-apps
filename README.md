@@ -3,7 +3,7 @@
 This repo contains two Spring Boot WebFlux services that work together:
 
 - `fileReader` (port 8080): CSV ingestion, customer profile APIs, and static UI.
-- `reporting` (port 8081): AI retention analysis + RAG ingestion/search (now split by domain).
+- `reporting` (port 8081): AI retention analysis + RAG ingestion/search (split into general vs retention).
 
 Both services use PostgreSQL (pgvector) via R2DBC and share the same schema (`aws`).
 
@@ -23,7 +23,7 @@ Both services use PostgreSQL (pgvector) via R2DBC and share the same schema (`aw
 3. `reporting` calls `fileReader` to fetch a combined `CustomerProfile`.
 4. `reporting` calls OpenAI (Spring AI ChatClient) to generate a `RetentionPlan`.
 5. `reporting` caches the plan by saving it back to `fileReader` (`aws.ai_interactions`).
-6. For general RAG, `reporting` chunks documents, embeds them, and stores chunks in pgvector.
+6. For general RAG, `reporting` chunks documents, embeds them, and stores chunks in pgvector so users can ask questions over any uploaded content.
 7. For retention RAG, policy documents are indexed and used to ground retention analysis.
 
 ## Quickstart (local)
@@ -104,7 +104,7 @@ Notes:
 
 ## Service: reporting (port 8081)
 
-### Customer retention APIs
+### Customer retention APIs (controller: `CustomerRetentionController`)
 
 - `GET /retention/{id}/analyze` -> returns `RetentionPlan` (uses cache when available)
 - `GET /retention/{id}/analyze/nocache` -> always calls the model
@@ -115,7 +115,7 @@ Notes:
 
 `RetentionPlan` fields: `riskLevel`, `reasoning[]`, `actions[]`, `offer`.
 
-### General RAG ingestion + search
+### General RAG ingestion + search (controller: `RagController`)
 
 - `POST /rag/upload` (multipart `file`) -> streaming chunk + embed + store in pgvector
 - `GET /rag/search?q=...&topK=...` -> semantic search results
