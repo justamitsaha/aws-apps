@@ -4,14 +4,20 @@
 **AWS Apps - Customer Churn + AI Reporting + RAG** is a two-service system built with **Java 21** and **Spring Boot WebFlux**. It focuses on customer churn analysis, AI-driven retention planning, and RAG (Retrieval-Augmented Generation) capabilities using **pgvector**.
 
 ### Architecture
+Detailed flow diagrams for the APIs can be found in [API_FLOWS.md](API_FLOWS.md).
+
 1. **`fileReader` (Port 8080)**:
-    - Responsible for CSV ingestion (via SSE streaming).
-    - Manages customer profiles and churn data.
+    - Responsible for CSV ingestion (via SSE streaming) using `CsvIngestionService`.
+    - Manages customer profiles and churn data via `CustomerService`.
+    - Manages AI recommendation cache via `AiCacheService`.
     - Serves the static UI (HTML/Bootstrap/jQuery).
-    - Database: PostgreSQL (schema: `aws`, tables: `customers`, `customer_churn`).
+    - Database: PostgreSQL (schema: `aws`, tables: `customers`, `customer_churn`, `ai_interactions`).
+
 2. **`reporting` (Port 8081)**:
-    - Provides AI retention analysis APIs.
-    - Implements RAG (Retrieval-Augmented Generation) ingestion and search.
+    - Provides AI retention analysis via `RetentionService`.
+    - Implements RAG ingestion and search via `RagService`.
+    - Centralized AI/LLM logic in `LlmService`.
+    - Document processing and chunking in `DocumentChunkingService`.
     - Integrates with OpenAI via **Spring AI**.
     - Database: PostgreSQL (schema: `aws`, tables: `documents`, `document_chunks` using `vector(1536)`).
 

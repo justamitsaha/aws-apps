@@ -4,11 +4,11 @@ import com.saha.amit.reporting.model.Chunk;
 import com.saha.amit.reporting.model.ChunkMatch;
 import com.saha.amit.reporting.model.RetentionPlan;
 import com.saha.amit.reporting.service.ExternalApiService;
-import com.saha.amit.reporting.service.RagChunkService;
-import com.saha.amit.reporting.service.RagIngestService;
-import com.saha.amit.reporting.service.RetentionAiService;
+import com.saha.amit.reporting.service.DocumentChunkingService;
+import com.saha.amit.reporting.service.RagService;
+import com.saha.amit.reporting.service.RetentionService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.*;
@@ -20,85 +20,52 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/retention")
+@RequiredArgsConstructor
 public class CustomerRetentionController {
 
-    private final RagChunkService ragChunkService;
-    private final RagIngestService ragIngestService;
-    private final RetentionAiService retentionAiService;
+    private final RetentionService retentionService;
+    private final DocumentChunkingService documentChunkingService;
+    private final RagService ragService;
     private final ExternalApiService externalApiService;
 
-    public CustomerRetentionController(RagChunkService ragChunkService, RagIngestService ragIngestService, RetentionAiService retentionAiService, ExternalApiService externalApiService) {
-        this.ragChunkService = ragChunkService;
-        this.ragIngestService = ragIngestService;
-        this.retentionAiService = retentionAiService;
-        this.externalApiService = externalApiService;
-    }
-
-    /**
-     * Analyze customer retention plan using AI service. Will check for cached result first.
-     * if not found in cache, will call AI service.
-     * Example: curl -X GET "http://localhost:8081/retention/123/analyze"
-     */
     @GetMapping("/{id}/analyze")
     public Mono<ResponseEntity<RetentionPlan>> analyze(@PathVariable Long id) {
-        return retentionAiService.analyzeCustomer(id)
+        return retentionService.analyzeCustomer(id)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
-    /**
-     * Analyze customer retention plan using AI service without cache.
-     * Example: curl -X GET "http://localhost:8081/retention/123/analyze/nocache"
-     */
     @GetMapping("/{id}/analyze/nocache")
     public Mono<ResponseEntity<RetentionPlan>> analyzeNoCache(@PathVariable Long id) {
-        return retentionAiService.analyzeCustomerWithoutCache(id)
+        return retentionService.analyzeCustomerWithoutCache(id)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
-    /**
-     * Upload a policy related file and return the chunks of that file.
-     * Request must be multipart/form-data with key "file"
-     * Example: curl -X POST http://localhost:8081/retention/policyUpload -F "file=@offers_catalog.md"
-     */
     @PostMapping(value = "/policyUpload", consumes = "multipart/form-data")
     public Mono<ResponseEntity<List<Chunk>>> upload(@RequestPart("file") FilePart filePart) {
-        return ragChunkService.chunkUploadedFile(filePart)
+        return documentChunkingService.chunkUploadedFile(filePart)
                 .flatMap(chunks ->
-                        // save to DB using the same filePart OR using chunks (recommended)
-                        ragIngestService.ingestChunks(filePart.filename(), chunks)
+                        ragService.ingestChunks(filePart.filename(), chunks)
                                 .thenReturn(ResponseEntity.ok(chunks))
                 );
     }
 
-    /**
-     * Search the ingested policy documents for relevant chunks.
-     * Example: curl -X GET "http://localhost:8081/retention/policySearch?q=discount+offers&topK=3"
-     */
     @GetMapping("/policySearch")
     public Flux<ChunkMatch> search(
             @RequestParam("q") String q,
             @RequestParam(name = "topK", defaultValue = "5") int topK
     ) {
-        return ragIngestService.search(q, topK, true);
+        return ragService.search(q, topK, true);
     }
 
-
-    /**
-     * Analyze customer retention plan using RAG approach. Uses ingested policy documents to
-     * provide context to AI service.
-     * Example: curl -X GET "http://localhost:8081/retention/123/analyze/rag"
-     */
     @GetMapping("/{id}/analyze/rag")
     public Mono<ResponseEntity<RetentionPlan>> analyzeWithRag(@PathVariable Long id) {
         return externalApiService.fetchCustomerProfile(id)
-                .flatMap(retentionAiService::analyzeCustomerWithRAg)
+                .flatMap(retentionService::analyzeCustomerWithRag)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
-
-
 }
 
 

@@ -9,8 +9,8 @@ Both services use PostgreSQL (pgvector) via R2DBC and share the same schema (`aw
 
 ## Repo layout
 
-- `fileReader/` - CSV ingestion + customer profile service (serves the UI).
-- `reporting/` - AI analysis + RAG service.
+- `fileReader/` - CSV ingestion, customer profile, and AI cache services (serves the UI).
+- `reporting/` - AI analysis, RAG logic, and document processing services.
 - `_setup/docker/docker-compose.yaml` - local Postgres (pgvector) container.
 - `_files/` - sample CSVs (`Churn_Modelling.csv`, `CustomerChurn.csv`).
 - `_rag-docs/` - sample policy documents for RAG uploads.
@@ -21,10 +21,12 @@ Both services use PostgreSQL (pgvector) via R2DBC and share the same schema (`aw
 1. Upload CSVs to `fileReader` (SSE streaming endpoints).
 2. `fileReader` stores customers + churn data in Postgres (`aws.customers`, `aws.customer_churn`).
 3. `reporting` calls `fileReader` to fetch a combined `CustomerProfile`.
-4. `reporting` calls OpenAI (Spring AI ChatClient) to generate a `RetentionPlan`.
-5. `reporting` caches the plan by saving it back to `fileReader` (`aws.ai_interactions`).
-6. For general RAG, `reporting` chunks documents, embeds them, and stores chunks in pgvector so users can ask questions over any uploaded content.
+4. `reporting` uses `LlmService` (via `RetentionService`) to generate a `RetentionPlan`.
+5. `reporting` caches the plan by saving it back to `fileReader` (`AiCacheService`).
+6. For general RAG, `reporting` (`DocumentChunkingService` and `RagService`) chunks documents, embeds them, and stores chunks in pgvector.
 7. For retention RAG, policy documents are indexed and used to ground retention analysis.
+
+Detailed API flows are documented in [API_FLOWS.md](API_FLOWS.md).
 
 ## Quickstart (local)
 
