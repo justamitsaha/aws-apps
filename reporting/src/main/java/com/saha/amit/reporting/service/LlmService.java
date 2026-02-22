@@ -7,10 +7,16 @@ import com.saha.amit.reporting.model.CustomerProfile;
 import com.saha.amit.reporting.model.RetentionPlan;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+import reactor.util.retry.Retry;
 
+import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Service dedicated to Large Language Model (LLM) interactions.
@@ -18,11 +24,17 @@ import java.util.List;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class LlmService {
 
+    private final ChatClient chatClient; // Kept for the reference method
     private final LlmExecutionWrapper llmExecutionWrapper;
     private final ObjectMapper objectMapper;
+
+    public LlmService(ChatClient.Builder builder, LlmExecutionWrapper llmExecutionWrapper, ObjectMapper objectMapper) {
+        this.chatClient = builder.build();
+        this.llmExecutionWrapper = llmExecutionWrapper;
+        this.objectMapper = objectMapper;
+    }
 
     /**
      * Generates a retention plan for a customer without additional context.
@@ -41,10 +53,15 @@ public class LlmService {
     }
 
     /**
-     * Answers a question based on the provided document context.
+     * Answers a question based on the provided document context with system prompt grounding.
      */
     public Mono<String> askQuestion(String question, String context) {
-        String prompt = """
+        String systemPrompt = """
+                You answer ONLY using the provided document context.
+                If the answer is not present, say "Not found in the document."
+                """;
+        
+        String userPrompt = """
                 Document context:
                 %s
                 
@@ -52,7 +69,7 @@ public class LlmService {
                 %s
                 """.formatted(context, question);
 
-        return llmExecutionWrapper.execute(prompt);
+        return llmExecutionWrapper.execute(systemPrompt, userPrompt);
     }
 
     private String buildRetentionPrompt(CustomerProfile profile, String policyContext) {
@@ -151,5 +168,69 @@ public class LlmService {
                 List.of(),
                 null,
                 null);
+    }
+
+    // --- OLD IMPLEMENTATION KEPT FOR REFERENCE ONLY ---
+
+    /**
+     * Manual Reactor-based implementation for reference.
+     * This logic is now encapsulated within the LlmExecutionWrapper for cross-cutting concerns.
+     */
+    @Deprecated(forRemoval = false)
+    private Mono<RetentionPlan> callLlmAndParsePlan_Reference(String prompt) {
+        return Mono.fromCallable(() -> chatClient.prompt()
+                        .user(prompt)
+                        .call()
+                        .content()
+                )
+                /*
+                 * Runs the blocking LLM HTTP call on Reactor's boundedElastic pool.
+                 * Prevents blocking the WebFlux event-loop threads.
+                 */
+                .subscribeOn(Schedulers.boundedElastic())
+                /*
+                 * Prevents requests from hanging indefinitely if the LLM
+                 * provider is slow or unresponsive.
+                 */
+                .timeout(Duration.ofSeconds(30))
+                /*
+                 * Retries transient failures such as network glitches
+                 * or temporary provider errors using exponential backoff.
+                 */
+                .retryWhen(
+                        Retry.backoff(2, Duration.ofSeconds(2))
+                                .filter(this::isRetryableError_Reference)
+                )
+                /*
+                 * LLM responses may contain explanations or markdown.
+                 * This step extracts only the valid JSON section.
+                 */
+                .map(this::extractJson)
+                /*
+                 * Converts JSON into the domain object using Jackson.
+                 * flatMap is required because parsing returns Mono<RetentionPlan>.
+                 */
+                .flatMap(this::parseRetentionPlan)
+                /*
+                 * Observability hooks for tracing execution lifecycle.
+                 */
+                .doOnSubscribe(s -> log.debug("Calling LLM for retention plan"))
+                .doOnSuccess(plan -> log.debug("Retention plan generated successfully"))
+                .doOnError(e -> log.error("LLM retention plan generation failed", e))
+                /*
+                 * Fallback behavior if the entire pipeline fails.
+                 * Ensures downstream services still receive a deterministic response.
+                 */
+                .onErrorResume(ex -> {
+                    log.warn("Falling back to default retention plan due to error: {}", ex.getMessage());
+                    return Mono.just(defaultRetentionPlan());
+                });
+    }
+
+    private boolean isRetryableError_Reference(Throwable t) {
+        return t instanceof IOException
+                || t instanceof TimeoutException
+                || (t.getMessage() != null &&
+                (t.getMessage().contains("503") || t.getMessage().contains("rate limit")));
     }
 }

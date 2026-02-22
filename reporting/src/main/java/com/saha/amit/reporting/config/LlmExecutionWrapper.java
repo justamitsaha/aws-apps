@@ -31,21 +31,32 @@ public class LlmExecutionWrapper {
     }
 
     /**
-     * Executes the provided prompt and returns the result as a String.
+     * Executes the provided user prompt and returns the result as a String.
      */
-    public Mono<String> execute(String prompt) {
+    public Mono<String> execute(String userPrompt) {
+        return execute(null, userPrompt);
+    }
+
+    /**
+     * Executes the provided prompt with an optional system prompt and returns the result as a String.
+     */
+    public Mono<String> execute(String systemPrompt, String userPrompt) {
         return Mono.defer(() -> {
             String promptId = UUID.randomUUID().toString();
             long startTime = System.currentTimeMillis();
             
-            log.info("LLM START promptId={}", promptId);
+            log.info("LLM START promptId={} | hasSystemPrompt={} | userPrompt={}", promptId, systemPrompt != null, userPrompt);
             
-            return Mono.fromCallable(() ->
-                            chatClient.prompt()
-                                    .user(prompt)
+            return Mono.fromCallable(() -> {
+                            var spec = chatClient.prompt();
+                            if (systemPrompt != null && !systemPrompt.isBlank()) {
+                                spec.system(systemPrompt);
+                                log.info("LLM SYSTEM PROMPT promptId={} systemPrompt={}", promptId, systemPrompt);
+                            }
+                            return spec.user(userPrompt)
                                     .call()
-                                    .chatResponse()
-                    )
+                                    .chatResponse();
+                    })
                     .subscribeOn(Schedulers.boundedElastic())
                     .timeout(Duration.ofSeconds(30))
                     .retryWhen(
