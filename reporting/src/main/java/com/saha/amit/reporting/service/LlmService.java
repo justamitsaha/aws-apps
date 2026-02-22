@@ -2,40 +2,34 @@ package com.saha.amit.reporting.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.saha.amit.reporting.config.LlmExecutionWrapper;
 import com.saha.amit.reporting.model.CustomerProfile;
-import com.saha.amit.reporting.model.DocumentAnswer;
 import com.saha.amit.reporting.model.RetentionPlan;
-import com.saha.amit.reporting.model.SourceChunk;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
 
 /**
  * Service dedicated to Large Language Model (LLM) interactions.
- * Handles prompt construction, model calls, and JSON parsing of AI responses.
+ * Handles prompt construction, model calls via a wrapper, and JSON parsing of AI responses.
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class LlmService {
 
-    private final ChatClient chatClient;
+    private final LlmExecutionWrapper llmExecutionWrapper;
     private final ObjectMapper objectMapper;
-
-    public LlmService(ChatClient.Builder builder, ObjectMapper objectMapper) {
-        this.chatClient = builder.build();
-        this.objectMapper = objectMapper;
-    }
 
     /**
      * Generates a retention plan for a customer without additional context.
      */
     public Mono<RetentionPlan> generateRetentionPlan(CustomerProfile profile) {
         String prompt = buildRetentionPrompt(profile, null);
-        return callLlmAndParsePlan(prompt);
+        return executeAndParse(prompt);
     }
 
     /**
@@ -43,7 +37,7 @@ public class LlmService {
      */
     public Mono<RetentionPlan> generateRetentionPlanWithContext(CustomerProfile profile, String policyContext) {
         String prompt = buildRetentionPrompt(profile, policyContext);
-        return callLlmAndParsePlan(prompt);
+        return executeAndParse(prompt);
     }
 
     /**
@@ -58,21 +52,10 @@ public class LlmService {
                 %s
                 """.formatted(context, question);
 
-        return Mono.fromCallable(() ->
-                        chatClient.prompt()
-                                .system("""
-                                        You answer ONLY using the provided document context.
-                                        If the answer is not present, say "Not found in the document."
-                                        """)
-                                .user(prompt)
-                                .call()
-                                .content()
-                )
-                .subscribeOn(Schedulers.boundedElastic());
+        return llmExecutionWrapper.execute(prompt);
     }
 
     private String buildRetentionPrompt(CustomerProfile profile, String policyContext) {
-        log.info("Building LLM prompt for customerId={} with policy context={}", profile.customerId(), policyContext);
         String basePrompt = """
                 You are an API that returns ONLY valid JSON. No markdown. No extra text.
                 
@@ -125,19 +108,22 @@ public class LlmService {
         if (policyContext != null) {
             prompt += "\nPOLICY CONTEXT (retrieved from company docs):\n" + policyContext;
         }
-        log.info("Constructed LLM prompt for customerId={}: {}", profile.customerId(), prompt);
+
         return prompt;
     }
 
-    private Mono<RetentionPlan> callLlmAndParsePlan(String prompt) {
-        return Mono.fromCallable(() -> chatClient.prompt()
-                        .user(prompt)
-                        .call()
-                        .content()
-                )
-                .subscribeOn(Schedulers.boundedElastic())
+    /**
+     * Executes the LLM call using the wrapper and handles parsing + business-level fallbacks.
+     */
+    private Mono<RetentionPlan> executeAndParse(String prompt) {
+        return llmExecutionWrapper.execute(prompt)
                 .map(this::extractJson)
-                .flatMap(this::parseRetentionPlan);
+                .flatMap(this::parseRetentionPlan)
+                .doOnSuccess(plan -> log.debug("Retention plan generated successfully"))
+                .onErrorResume(ex -> {
+                    log.error("LLM retention plan generation failed, falling back to default. Error: {}", ex.getMessage());
+                    return Mono.just(defaultRetentionPlan());
+                });
     }
 
     private String extractJson(String text) {
@@ -156,5 +142,14 @@ public class LlmService {
         } catch (JsonProcessingException e) {
             return Mono.error(new RuntimeException("Invalid JSON returned by model: " + json, e));
         }
+    }
+
+    private RetentionPlan defaultRetentionPlan() {
+        return new RetentionPlan(
+                RetentionPlan.RiskLevel.MEDIUM,
+                List.of("Unable to generate plan due to technical issues. Please try again later."),
+                List.of(),
+                null,
+                null);
     }
 }
