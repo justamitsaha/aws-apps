@@ -3,9 +3,10 @@ package com.saha.amit.reporting.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.saha.amit.reporting.config.LlmExecutionWrapper;
+import com.saha.amit.reporting.config.LlmProviderFactory;
+import com.saha.amit.reporting.config.LlmProviderFilter;
 import com.saha.amit.reporting.model.CustomerProfile;
 import com.saha.amit.reporting.model.RetentionPlan;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
@@ -20,19 +21,19 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * Service dedicated to Large Language Model (LLM) interactions.
- * Handles prompt construction, model calls via a wrapper, and JSON parsing of AI responses.
+ * Handles prompt construction, model calls via a dynamic provider factory, and JSON parsing of AI responses.
  */
 @Slf4j
 @Service
 public class LlmService {
 
     private final ChatClient chatClient; // Kept for the reference method
-    private final LlmExecutionWrapper llmExecutionWrapper;
+    private final LlmProviderFactory llmProviderFactory;
     private final ObjectMapper objectMapper;
 
-    public LlmService(ChatClient.Builder builder, LlmExecutionWrapper llmExecutionWrapper, ObjectMapper objectMapper) {
-        this.chatClient = builder.build();
-        this.llmExecutionWrapper = llmExecutionWrapper;
+    public LlmService(ChatClient chatClient, LlmProviderFactory llmProviderFactory, ObjectMapper objectMapper) {
+        this.chatClient = chatClient;
+        this.llmProviderFactory = llmProviderFactory;
         this.objectMapper = objectMapper;
     }
 
@@ -69,7 +70,8 @@ public class LlmService {
                 %s
                 """.formatted(context, question);
 
-        return llmExecutionWrapper.execute(systemPrompt, userPrompt);
+        return selectWrapper()
+                .flatMap(wrapper -> wrapper.execute(systemPrompt, userPrompt));
     }
 
     private String buildRetentionPrompt(CustomerProfile profile, String policyContext) {
@@ -133,7 +135,8 @@ public class LlmService {
      * Executes the LLM call using the wrapper and handles parsing + business-level fallbacks.
      */
     private Mono<RetentionPlan> executeAndParse(String prompt) {
-        return llmExecutionWrapper.execute(prompt)
+        return selectWrapper()
+                .flatMap(wrapper -> wrapper.execute(prompt))
                 .map(this::extractJson)
                 .flatMap(this::parseRetentionPlan)
                 .doOnSuccess(plan -> log.debug("Retention plan generated successfully"))
@@ -141,6 +144,14 @@ public class LlmService {
                     log.error("LLM retention plan generation failed, falling back to default. Error: {}", ex.getMessage());
                     return Mono.just(defaultRetentionPlan());
                 });
+    }
+
+    private Mono<LlmExecutionWrapper> selectWrapper() {
+        return Mono.deferContextual(ctx -> {
+            String provider = ctx.getOrDefault(LlmProviderFilter.CONTEXT_KEY, "openai");
+            log.info("Runtime selected LLM provider: {}", provider);
+            return Mono.just(llmProviderFactory.getWrapper(provider));
+        });
     }
 
     private String extractJson(String text) {
