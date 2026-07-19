@@ -12,7 +12,8 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pgvector_data:/var/lib/postgresql/data
+      # Maps your local OneDrive folder to the Postgres data directory
+      - "C:/Users/justa/OneDrive/Documents/pgvector:/var/lib/postgresql/data"
 
-volumes:
-  pgvector_data:
+# Note: The 'volumes' block at the bottom is removed
+# because we are now using a direct host path (bind mount).

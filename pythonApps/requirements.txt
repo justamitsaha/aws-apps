@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+sqlalchemy[asyncio]
+asyncpg
+pgvector
+pydantic
+pydantic-settings
+httpx
+pandas
+python-multipart
+openai
+python-dotenv
+jinja2
+aiofiles
